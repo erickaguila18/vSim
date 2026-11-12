@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador de ventiladores mecánicos · Práctica de programación</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--yellow:#f6c40f;--red:#d9231f;--green:#7fc96b}
+*{box-sizing:border-box}
+body{background:#e8ecf1;font-family:'Noto Sans',system-ui,sans-serif;color:#1b2430}
+.app-head{background:#16315f;color:#fff}
+.app-head small{color:#b8c7e6}
+/* ---------- Dispositivo ---------- */
+#deviceWrap{position:relative;width:100%;max-width:1040px;margin:0 auto;aspect-ratio:1040/740;overflow:hidden}
+#deviceWrap:fullscreen{max-width:none;aspect-ratio:auto;background:#10131a}
+#device{position:absolute;left:0;top:0;width:1040px;height:740px;transform-origin:0 0;background:linear-gradient(180deg,#3a3d41,#26282b);border-radius:48px;box-shadow:0 20px 50px rgba(0,0,0,.35),inset 0 0 0 4px #1c1d1f;overflow:hidden}
+.d-stripe{position:absolute;left:0;top:0;right:0;height:18px;background:linear-gradient(90deg,#e8861a,#ffa834 50%,#e8861a)}
+.d-face{position:absolute;left:0;right:0;top:664px;height:76px;background:linear-gradient(180deg,#bcbab5,#8d8b87)}
+.d-brand{position:absolute;left:60px;top:684px;font-weight:800;font-size:34px;letter-spacing:1px;color:#f3f1ec;text-shadow:0 1px 0 #666}
+.d-plate{position:absolute;right:90px;top:682px;width:190px;height:44px;background:#243a66;border-radius:8px;color:#9db4e8;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.1}
+#bezel{position:absolute;left:22px;top:38px;width:800px;height:612px;background:#0e0f11;border-radius:22px;box-shadow:inset 0 0 0 3px #3d4044}
+#panel{position:absolute;left:840px;top:38px;width:176px;height:612px;background:linear-gradient(#222427,#1a1b1d);border-radius:22px;box-shadow:inset 0 0 0 3px #34363a}
+.pwr{position:absolute;left:56px;top:26px;width:64px;height:64px;border-radius:50%;border:4px solid #62d94b;background:radial-gradient(#2c2e31,#17181a);color:#62d94b;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 0 10px rgba(98,217,75,.45)}
+.pwr.hold{transform:scale(.94);background:#0d2a0b}
+.pwr svg{width:30px;height:30px}
+.leds{position:absolute;left:44px;top:104px;width:88px;display:flex;align-items:center;justify-content:space-between}
+.leds i{width:9px;height:9px;border-radius:50%;background:#2f4d2b}
+.leds i.on{background:#5fe04a;box-shadow:0 0 6px #5fe04a}.leds i.warn{background:#ffb300;box-shadow:0 0 6px #ffb300}
+.leds .bat{width:28px;height:12px;border:2px solid #aaa;border-radius:3px}
+.keys{position:absolute;left:22px;top:140px;width:132px;display:grid;grid-template-columns:1fr 1fr;gap:12px 10px}
+.key{height:50px;border-radius:14px;background:linear-gradient(#4b4e52,#303235);border:2px solid #17181a;color:#e9e9e9;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;font-size:15px;font-weight:700;padding:0}
+.key svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.key.on{box-shadow:inset 0 0 0 2px #62d94b;color:#9cf08b}
+.key:active{transform:translateY(1px);filter:brightness(.85)}
+.key2{grid-column:span 2;height:48px;font-size:12px;gap:8px}
+.key2 .led{position:absolute;left:10px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:#4a1a18}
+.key2 .led.on{background:#ff3b30;box-shadow:0 0 6px #ff3b30}
+#knobWrap{position:absolute;left:28px;top:410px;width:120px;height:120px}
+#knob{width:120px;height:120px;border-radius:50%;background:#1b1c1e;border:4px solid #0d0d0e;position:relative;touch-action:none;cursor:grab;box-shadow:0 4px 10px rgba(0,0,0,.6)}
+#knobIn{position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(#2a2c2f 0 8deg,#4a4d52 8deg 16deg)}
+.knob-c{position:absolute;left:30px;top:30px;width:52px;height:52px;border-radius:50%;border:5px solid #39e05a;box-shadow:0 0 12px #39e05a,inset 0 0 8px #0a0a0a;background:#0f1012}
+.kbtns{position:absolute;left:24px;top:548px;width:128px;display:flex;justify-content:space-between}
+.kbtns button{width:38px;height:34px;border-radius:10px;border:2px solid #17181a;background:linear-gradient(#4b4e52,#303235);color:#fff;font-weight:700;font-size:18px;line-height:1;padding:0;cursor:pointer}
+.kbtns button.ok{color:#8fe27a}
+/* ---------- Pantalla ---------- */
+#screen{position:absolute;left:20px;top:21px;width:760px;height:570px;background:#000;overflow:hidden;color:#fff;font-size:15px;user-select:none;-webkit-user-select:none;border-radius:4px;filter:brightness(var(--br,1))}
+#screen.night{filter:brightness(var(--br,.38)) sepia(.35)}
+#screen .off{position:absolute;inset:0;background:#050505;display:flex;align-items:center;justify-content:center;color:#2a2f36;font-size:19px;text-align:center;padding:30px}
+.boot{position:absolute;inset:0;background:#fff;color:#1c3d7a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.boot h1{font-weight:800;font-size:56px;letter-spacing:2px;margin:0}
+.boot p{margin:0;font-size:17px;color:#47628f}
+.boot .bar{width:380px;height:10px;background:#d6dde9;border-radius:6px;overflow:hidden}
+.boot .bar i{display:block;height:100%;background:#1c3d7a;width:0;animation:fill 3.4s linear forwards}
+@keyframes fill{to{width:100%}}
+#topbar{position:absolute;left:0;top:0;width:760px;height:46px;display:flex;background:#000;z-index:3}
+.t-mode{width:170px;padding-left:14px;font-size:27px;font-weight:600;line-height:46px;white-space:nowrap}
+.t-msg{flex:1;display:flex;align-items:center;justify-content:center;font-size:19px;color:#111;min-width:0;text-align:center;background:#000}
+.t-msg.y{background:var(--yellow)}
+.t-msg.r{background:var(--red);color:#fff;animation:blink 1s steps(2) infinite}
+.t-msg.i{background:#3a3d42;color:#fff}
+@keyframes blink{50%{background:#8c1511}}
+.t-btn{width:130px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:19px;background:#101114;cursor:pointer;border-left:2px solid #000}
+.t-btn:hover,.s-btn:hover,.b-tab:hover{filter:brightness(1.35)}
+.content{position:absolute;left:0;top:46px;width:630px;height:478px;overflow:hidden;background:#000}
+.side{position:absolute;right:0;top:46px;width:130px;height:478px;background:#0e0f12;display:flex;flex-direction:column;align-items:center;padding-top:4px;z-index:2}
+.s-spacer{flex:1}
+.s-btn{width:130px;height:46px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;background:#17191d;border-top:2px solid #000;cursor:pointer}
+.s-btn.on,.b-tab.on{background:#2b4a7a}
+.bottom{position:absolute;left:0;bottom:0;width:760px;height:46px;display:flex;background:#0d0e10;z-index:3}
+.b-tab{display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;background:#14161a;border-right:2px solid #000;cursor:pointer}
+.b-ico{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:12px;padding-right:12px;font-size:14px;color:#cfd6df}
+.b-ico svg{width:22px;height:22px}
+.b-ico .bt{width:22px;height:30px}
+.cc{display:flex;flex-direction:column;align-items:center;cursor:pointer;padding:3px 0}
+.cc .ring{width:72px;height:72px;border-radius:50%;border:3px solid #e9edf2;background:#0a0d11;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.cc .ring b{font-size:24px;font-weight:600}
+.cc .ring small{font-size:10.5px;margin-top:3px;color:#cfd6df}
+.cc>span{font-size:12.5px;margin-top:3px;color:#dfe5ec;text-align:center}
+.cc.sel .ring{border-color:#ffb300;box-shadow:0 0 0 3px rgba(255,179,0,.35)}
+.cc.pend .ring b{color:#ffd54a}
+.cc.boost .ring{border-color:#ffb300}
+.hintbar{position:absolute;left:0;bottom:0;width:630px;height:30px;background:#ffb300;color:#111;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;z-index:6}
+/* vista de ventilación */
+.run{position:absolute;inset:0}
+.nums{position:absolute;left:0;top:0;width:136px;height:478px;background:#0b0c10}
+.num{height:119.5px;border-bottom:1px solid #20232a;padding-top:8px;text-align:center}
+.num b{display:block;font-size:46px;font-weight:500;line-height:1.05}
+.num b.al{color:#ffcf1f}
+.num span{display:block;font-size:13px;color:#d9dee6;line-height:1.2;margin-top:2px;font-weight:600}
+.num em{display:block;font-size:12px;color:#c0c8d4;font-style:normal}
+.cw{position:absolute;left:136px;width:494px;height:159px}
+/* standby */
+.sb{position:absolute;inset:0;background:#0a58a8}
+.sb-banner{position:absolute;left:0;top:0;width:630px;height:150px;background:#f6c40f;color:#111;text-align:center}
+.sb-title{position:absolute;left:0;right:0;top:12px;font-size:42px;display:flex;justify-content:center;align-items:center;gap:22px}
+.sb-time{position:absolute;left:0;right:0;top:76px;font-size:30px}
+.sb-txt{position:absolute;left:0;right:0;top:112px;font-size:14px;line-height:1.35}
+.sb-tabs{position:absolute;left:0;top:150px;width:630px;height:46px;display:flex;justify-content:center;gap:6px;padding-top:6px}
+.sb-tab{width:300px;border:2px solid #3b78bf;display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;color:#cfe1f7}
+.sb-tab.on{background:#08407e;color:#fff;border-color:#8cb6e8}
+.sb-pat{position:absolute;left:14px;right:14px;top:206px;height:190px}
+.sb-pat .lbl{position:absolute;left:6px;top:46px;font-size:19px}
+.sexb{position:absolute;top:36px;width:152px;height:50px;border:2px solid #1d4f8d;background:#0a4685;color:#9db9db;font-size:19px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.sexb.on{background:#8fd47a;color:#fff;border-color:#8fd47a;font-weight:600}
+.sb-pat .hring{position:absolute;left:236px;top:100px}
+.sb-pat .hring .ring{background:#0a58a8}
+.sb-pat .pci{position:absolute;right:20px;top:112px;display:flex;align-items:flex-end;gap:6px;font-size:50px;font-weight:500;line-height:1}
+.sb-pat .pci small{font-size:14px;line-height:1.1;margin-bottom:6px;color:#e7f0fb}
+.sb-act{position:absolute;left:0;right:0;top:402px}
+.sbtn{position:absolute;top:0;height:48px;display:flex;align-items:center;justify-content:center;font-size:19px;color:#344;background:#e4e6ea;cursor:pointer;border:2px solid #e4e6ea;font-weight:500}
+.sbtn:hover{filter:brightness(.93)}
+.sbtn.go{left:150px;width:466px;border-color:#f0a21a;background:#eeeff2}
+.sbtn.pre{left:14px;width:120px;font-size:16px}
+.sbtn.pre.ok{border-color:#38a84a}
+.sb-hint{position:absolute;left:150px;top:52px;width:466px;font-size:12.5px;text-align:center;color:#e2edf9}
+/* ventanas */
+.win{position:absolute;inset:0;background:#10151c;display:flex;flex-direction:column;z-index:4}
+.win-h{height:42px;background:#1d2733;display:flex;align-items:center;padding:0 14px;font-size:20px;font-weight:600;flex:none}
+.win-h .x{margin-left:auto;cursor:pointer;width:42px;height:30px;text-align:center;border-radius:6px;background:#2d3a49;line-height:30px}
+.win-b{flex:1;padding:12px;overflow:auto;padding-bottom:36px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px 6px}
+.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mbtn{height:54px;border:2px solid #3a4b61;background:#1a2431;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;cursor:pointer}
+.mbtn.cur{border-color:#8fd47a}.mbtn.on{background:#2b4a7a;border-color:#ffb300}
+.mdesc{margin-top:12px;font-size:14.5px;line-height:1.4;color:#dce4ee;min-height:84px}
+.btnrow{display:flex;gap:10px;margin-top:10px}
+.wbtn{padding:10px 22px;background:#2b4a7a;border:2px solid #4668a0;font-size:17px;font-weight:600;cursor:pointer;text-align:center}
+.wbtn.gray{background:#2a313b;border-color:#445}
+.wbtn.dis{opacity:.4;pointer-events:none}
+.mt{width:100%;border-collapse:collapse;font-size:16px}
+.mt td{padding:5px 8px;border-bottom:1px solid #243040}
+.mt td:nth-child(2){text-align:right;font-weight:700;font-size:19px;color:#fff}
+.mt td:nth-child(3){color:#9fb0c6;font-size:13px;width:70px}
+.mt-2{display:grid;grid-template-columns:1fr 1fr;gap:0 22px}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tbtn{padding:14px 10px;border:2px solid #3a4b61;background:#1a2431;font-size:16.5px;font-weight:600;cursor:pointer;text-align:center}
+.tbtn small{display:block;font-weight:400;color:#9fb0c6;font-size:12.5px;margin-top:3px}
+.tbtn.act{border-color:#8fd47a;background:#17331f}
+.evl{font-size:14px;width:100%;border-collapse:collapse}
+.evl td{padding:4px 6px;border-bottom:1px solid #1f2a38;vertical-align:top}
+.evl td:first-child{color:#8ea2bd;white-space:nowrap;width:78px}
+.evl .alarm td:last-child{color:#ff8f87}.evl .ok td:last-child{color:#8fe27a}
+.arow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.achip{padding:5px 12px;font-size:15px;font-weight:600;color:#111;background:var(--yellow)}
+.achip.r{background:var(--red);color:#fff}
+.prow{display:flex;align-items:center;gap:10px;padding:9px 6px;border-bottom:1px solid #243040;font-size:15.5px}
+.prow .nm{flex:1}.prow .nm small{display:block;color:#9fb0c6;font-size:12.5px}
+.chip{padding:3px 10px;border-radius:12px;font-size:13px;background:#334;color:#cfd}
+.chip.ok{background:#1f6b2e}.chip.run{background:#8a6d00}
+.pb{width:120px;height:8px;background:#233;border-radius:5px;overflow:hidden}.pb i{display:block;height:100%;width:0;background:#8fd47a}
+.dlg{position:absolute;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:30}
+.dlg>div{width:430px;background:#1d2733;border:2px solid #4668a0;padding:20px}
+.dlg h4{margin:0 0 8px;font-size:21px}.dlg p{font-size:16px;line-height:1.4}
+.toast-s{position:absolute;left:50%;bottom:56px;transform:translateX(-50%);background:#ffd54a;color:#111;padding:8px 18px;border-radius:8px;font-size:15px;z-index:40;white-space:nowrap}
+.sysr{display:flex;align-items:center;gap:12px;padding:8px 4px;font-size:16px}.sysr input{flex:1}
+/* panel de instructor */
+.card-h{font-weight:700}
+.goals li{padding:2px 0;color:#6b7686}.goals li.ok{color:#198754;font-weight:600}
+.pv{font-variant-numeric:tabular-nums;min-width:3.2em;display:inline-block;text-align:right;font-weight:600}
+/* ---- correcciones de espacios ---- */
+.side.compact .cc .ring{width:62px;height:62px}
+.side.compact .cc .ring b{font-size:21px}
+.side.compact .cc .ring small{font-size:9.5px;margin-top:2px}
+.side.compact .cc>span{font-size:11.5px;margin-top:2px}
+.ltv-lab.n{width:54px;font-size:10px}
+.ltv-lab{width:76px}
+.ltv-leg{width:142px;font-size:10px}
+/* ---- pulmón de prueba ---- */
+#lungHost svg{display:block;width:100%;height:auto;max-height:380px}
+#lvY{cursor:pointer}#lvY:hover .ycap{stroke:#0d6efd;stroke-width:3}
+.lflow{fill:none;stroke:#fff;stroke-width:4;stroke-dasharray:10 16;stroke-linecap:round;opacity:0}
+.lvblink{animation:lblink .9s steps(2) infinite}
+.lstat{border:1px solid var(--bs-border-color,#dee2e6);border-radius:.5rem;padding:.4rem .5rem;text-align:center;background:#fff}
+.lstat small{display:block;font-size:.72rem;color:#6b7686;line-height:1.1;margin-bottom:2px}
+.lstat b{font-size:1.15rem;font-variant-numeric:tabular-nums;font-weight:600}
+
+/* ---- selector de carcasas ---- */
+#shellBar .btn{--bs-btn-padding-y:.25rem;--bs-btn-padding-x:.7rem;font-size:.82rem;line-height:1.15;text-align:left}
+#shellBar .btn small{display:block;font-size:.62rem;opacity:.75}
+#device{--acc:#ffb300;--acc2:#ffd54a;--tabon:#2b4a7a}
+.cc.sel .ring{border-color:var(--acc);box-shadow:0 0 0 3px rgba(255,255,255,.18)}
+.cc.pend .ring b{color:var(--acc2)}
+.hintbar{background:var(--acc)}
+.s-btn.on,.b-tab.on{background:var(--tabon)}
+.mbtn.on{background:var(--tabon);border-color:var(--acc)}
+#device.sk-oxy{--acc:#3ec1e6;--acc2:#9be8fb;--tabon:#14587a;background:linear-gradient(180deg,#5c6067,#3b3e43)}
+#device.sk-oxy .d-stripe{background:linear-gradient(90deg,#1456a0,#2d8be6 50%,#1456a0)}
+#device.sk-oxy .d-face{background:linear-gradient(180deg,#a7abb1,#7b7f85)}
+#device.sk-sv{--acc:#4aa3ff;--acc2:#a8d2ff;--tabon:#1d4f91;background:linear-gradient(180deg,#d4d8de,#aeb4bd)}
+#device.sk-sv .d-stripe{background:linear-gradient(90deg,#c01c2c,#ee3a4c 50%,#c01c2c)}
+#device.sk-sv .d-face{background:linear-gradient(180deg,#eceef1,#c3c8cf)}
+#device.sk-sv .d-brand{color:#3a4350;text-shadow:none}
+#device.sk-sv #panel{background:linear-gradient(#e2e5e9,#c7ccd3);box-shadow:inset 0 0 0 3px #aab0b9}
+#device.sk-pb{--acc:#ffb74d;--acc2:#ffd699;--tabon:#16508a;background:linear-gradient(180deg,#34383f,#1f2227)}
+#device.sk-pb .d-stripe{background:linear-gradient(90deg,#0068b8,#2f9bf0 50%,#0068b8)}
+#device.sk-servo{--acc:#4cd98a;--acc2:#a5f0c6;--tabon:#17624a;background:linear-gradient(180deg,#42454c,#25272c)}
+#device.sk-servo .d-stripe{background:linear-gradient(90deg,#008a76,#1fc9a8 50%,#008a76)}
+#device.panelmode{background:#0f1115}
+#device.panelmode>*:not(#devLTV){display:none}
+#devLTV{display:none;position:absolute;inset:0}
+#device.panelmode #devLTV{display:block}
+/* ---- LTV 1200 ---- */
+.ltv-fabric{position:absolute;inset:0;background:repeating-linear-gradient(45deg,#15171c 0 3px,#101216 3px 6px)}
+.ltv-housing{position:absolute;left:20px;top:100px;width:1000px;height:560px;border-radius:20px;background:linear-gradient(#5a47ad,#3d2f82);box-shadow:0 8px 20px rgba(0,0,0,.5)}
+.ltv-band{position:absolute;left:0;top:112px;width:1040px;height:40px;background:repeating-linear-gradient(90deg,#0d0d0f 0 3px,#17171a 3px 6px)}
+.ltv-buckle{position:absolute;left:470px;top:-8px;width:100px;height:56px;background:linear-gradient(#2d2d33,#151518);border-radius:8px;border:2px solid #3b3b42}
+#ltvFace{position:absolute;left:30px;top:165px;width:980px;height:485px;background:#e8e9ee;border-radius:6px;color:#2a2d49;font-family:'Noto Sans',sans-serif;box-shadow:inset 0 0 0 2px #c7c9d4;user-select:none;-webkit-user-select:none}
+#ltvFace>*{position:absolute}
+.ltv-t{font-size:15px;font-weight:500}
+.ltv-bar{height:20px;background:#17171a;border-radius:3px;overflow:hidden}
+#ltvFill{position:absolute;left:0;top:0;height:100%;width:0;background:linear-gradient(90deg,#34e05a 0,#34e05a 55%,#ffd23a 75%,#ff4a3a 100%);background-size:606px 100%}
+.ltv-seg{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 8px,#17171a 8px 11px)}
+.ltv-tk{font-size:11px;transform:translateX(-50%)}
+.ltv-mon{background:#151517;border-radius:4px;font-family:'Share Tech Mono','Courier New',monospace;font-size:24px;letter-spacing:2px;color:#ffb02e;padding:0 20px 0 100px;line-height:41px;white-space:nowrap;overflow:hidden}
+.ltv-mon.red{color:#ff5144;animation:lblink 1s steps(2) infinite}.ltv-mon.yel{color:#ffd23a}
+@keyframes lblink{50%{opacity:.25}}
+.ltv-leg{line-height:1;border:2px solid #cfd0da;border-radius:3px;padding:6px 4px;background:#f1f1f5}
+.ltv-leg>div{display:flex;align-items:center;height:21px}
+.led{width:22px;height:6px;background:#3a2f2f;border-radius:2px;transform:translateX(-50%);display:block}
+.led.on{background:var(--lc,#4cff5a);box-shadow:0 0 6px var(--lc,#4cff5a)}
+.led.s{position:static;transform:none;margin-right:6px;flex:none}
+.ltv-logo{font-size:48px;font-weight:800;letter-spacing:-1px;color:#2a2d49}
+.ltv-logo sup{font-size:12px}.ltv-logo span{font-size:28px;font-weight:400;margin-left:2px;vertical-align:-8px}
+.ltv-cf{font-size:21px;font-weight:600;color:#3a3d58}
+.ltv-box{border:2px solid #3f3c8f;border-radius:4px;background:#ecedf2}
+.ltv-box.red{border-color:#cf2a2a}
+.ltv-hd{height:31px;line-height:31px;text-align:center;color:#fff;font-weight:800;font-size:20px;background:#3f3c8f;border-radius:3px 3px 0 0}
+.ltv-hd.red{background:#cf2a2a}
+.ltv-lab{text-align:center;font-size:11px;font-weight:700;line-height:1.15;transform:translateX(-50%)}
+.ltv-lab small{display:block;font-weight:400;font-size:9.5px}
+.ltv-d{height:44px;background:#18181b;border-radius:4px;padding:3px 0;display:flex;align-items:center;justify-content:center;transform:translateX(-50%);box-shadow:inset 0 0 0 1px #000}
+.ltv-d svg{display:block}
+.ltv-d.blink{animation:lblink .8s steps(2) infinite}
+.lb{width:46px;height:42px;border-radius:9px;background:linear-gradient(#dcd7f8,#bdb5ec);border:2px solid #9a92d6;transform:translateX(-50%);cursor:pointer;padding:0;font-size:12px;font-weight:600;color:#3a3a5c}
+.lb:active{filter:brightness(.88)}
+.lb.sel{background:linear-gradient(#fff,#e6e6ef);border-color:#bbbccb}
+.ltv-vnip{display:flex;align-items:center;font-size:10px;font-weight:600;cursor:pointer}
+#ltvKnob{width:122px;height:122px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#5f54bb 0,#43388c 62%,#2a2260 100%);border:3px solid #241d55;box-shadow:0 4px 8px rgba(0,0,0,.4);touch-action:none;cursor:grab}
+#ltvKnobIn{position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(rgba(255,255,255,.14) 0 4deg,transparent 4deg 9deg)}
+#ltvKnobIn .dimple{position:absolute;left:70px;top:32px;width:30px;height:30px;border-radius:50%;background:radial-gradient(#6a5fc4,#2d2570);box-shadow:inset 0 2px 4px rgba(0,0,0,.55)}
+.ltv-kb{position:absolute;left:640px;top:672px;display:flex;gap:8px}
+.ltv-kb button{width:48px;height:36px;border-radius:10px;border:2px solid #3b3b42;background:linear-gradient(#4b4e52,#303235);color:#fff;font-weight:700;font-size:18px;padding:0;cursor:pointer}
+.ltv-kb button.ok{color:#8fe27a}
+.ltv-hint{position:absolute;left:30px;top:676px;color:#8f93a8;font-size:12px;width:560px}
+
+</style>
+</head>
+<body>
+<nav class="app-head py-2">
+  <div class="container-xxl d-flex align-items-center gap-3 flex-wrap">
+    <div class="me-auto">
+      <div class="fw-bold fs-5"><i class="fi fi-rr-heart-rate me-2"></i>Simulador de ventiladores mecánicos</div>
+      <small>Hamilton-T1, LTV 1200 y más · práctica de programación con pulmón de prueba · uso educativo</small>
+    </div>
+    <div class="d-flex align-items-center gap-2" title="Volumen general de sonidos"><button class="btn btn-sm btn-outline-light" id="btnMute" type="button" aria-label="Silenciar sonidos"><i class="fi fi-rr-volume"></i></button><input type="range" class="form-range" id="hVol" min="0" max="10" value="6" style="width:96px" aria-label="Volumen general"></div>
+    <button class="btn btn-sm btn-outline-light" id="btnFull"><i class="fi fi-rr-expand me-1"></i>Pantalla completa</button>
+    <button class="btn btn-sm btn-light" id="btnReset"><i class="fi fi-rr-refresh me-1"></i>Reiniciar</button>
+  </div>
+</nav>
+
+<main class="container-xxl py-3">
+  <div class="row g-3">
+    <div class="col-12 col-xl-8">
+      <div class="d-flex align-items-center flex-wrap gap-2 mb-2"><span class="small fw-semibold text-secondary"><i class="fi fi-rr-apps me-1"></i>Carcasa:</span><div class="d-flex flex-wrap gap-2" id="shellBar"></div></div>
+      <p class="small text-secondary mb-2" id="shellNote"></p>
+      <div id="deviceWrap">
+        <div id="device">
+          <div class="d-stripe"></div>
+          <div id="bezel"><div id="screen"></div></div>
+          <div id="panel">
+            <button class="pwr" id="pwr" aria-label="Encendido / Standby"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v9"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg></button>
+            <div class="leds"><i id="led2"></i><span class="bat"></span><i id="led1" class="on"></i></div>
+            <div class="keys">
+              <button class="key" data-key="night" title="Modo nocturno"><svg viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4 6.5 6.5 0 0 0 20 14.5z"/></svg></button>
+              <button class="key" data-key="lock" title="Bloqueo de pantalla"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></button>
+              <button class="key" data-key="manual" title="Respiración manual"><svg viewBox="0 0 24 24"><path d="M12 3v7"/><path d="M11 9c-3 0-6 4-6 9 0 1.5 1.2 2 2.4 1.3 2-1.2 3.6-2.6 3.6-5z"/><path d="M13 9c3 0 6 4 6 9 0 1.5-1.2 2-2.4 1.3-2-1.2-3.6-2.6-3.6-5z"/></svg></button>
+              <button class="key" data-key="o2" title="Enriquecimiento de O2 (100 %, 2 min)">↑O<sub>2</sub></button>
+              <button class="key" data-key="freeze" title="Congelar curvas"><svg viewBox="0 0 24 24"><path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"/></svg></button>
+              <button class="key" data-key="neb" title="Nebulizador (10 min)"><svg viewBox="0 0 24 24"><path d="M7 10h6v10H7zM9 10V6h2v4M13 8h4M13 5.5l3.5-1.5M13 11l3.5 1.5"/></svg></button>
+              <button class="key key2" data-key="sil" title="Silenciar alarma 2 min"><span class="led" id="silLed"></span><svg viewBox="0 0 24 24"><path d="M6 17h12l-2-3v-4a4 4 0 0 0-8 0v4zM10 20a2 2 0 0 0 4 0"/></svg>2 MIN</button>
+            </div>
+            <div id="knobWrap"><div id="knob" title="Gire para ajustar · pulse para confirmar"><div id="knobIn"></div><div class="knob-c"></div></div></div>
+            <div class="kbtns"><button id="kMinus" aria-label="Disminuir">−</button><button id="kOk" class="ok" aria-label="Confirmar">✓</button><button id="kPlus" aria-label="Aumentar">+</button></div>
+          </div>
+          <div class="d-face"></div>
+          <div class="d-brand" id="brand">HAMILTON·T1</div>
+          <div class="d-plate" id="plate">HAMILTON<br>MEDICAL</div>
+          <div id="devLTV"></div>
+        </div>
+      </div>
+      <p class="small text-secondary mt-2 mb-0"><i class="fi fi-rr-info me-1"></i>En celular conviene girar a horizontal o usar «Pantalla completa». Teclado: ← → ajustan, Enter confirma, Esc cancela.</p>
+      <div class="card shadow-sm mt-3" id="lungCard">
+        <div class="card-header card-h d-flex align-items-center flex-wrap gap-2">
+          <span><i class="fi fi-rr-stethoscope me-2"></i>Pulmón de prueba conectado</span>
+          <span class="badge text-bg-success" id="lungBadge">Conectado</span>
+          <div class="form-check form-switch mb-0 ms-auto"><input class="form-check-input" type="checkbox" id="swFlow"><label class="form-check-label small" for="swFlow">Sonido de flujo de aire</label></div>
+        </div>
+        <div class="card-body p-2 p-md-3">
+          <div id="lungHost"></div>
+          <div class="row g-2 mt-1" id="lungStats"></div>
+          <p class="small text-secondary mt-2 mb-0">Toque la <b>pieza en Y</b> del circuito para desconectar o reconectar al paciente. El pulmón responde a la compliance, la resistencia y el esfuerzo del panel del instructor.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-xl-4">
+      <div class="card mb-3 shadow-sm">
+        <div class="card-header card-h"><i class="fi fi-rr-user me-2"></i>Paciente simulado (instructor)</div>
+        <div class="card-body">
+          <label class="form-label small mb-1">Escenario</label>
+          <select id="scen" class="form-select form-select-sm mb-3"></select>
+          <div class="mb-2"><div class="d-flex justify-content-between small"><span>Compliance (ml/cmH2O)</span><span class="pv" id="vC"></span></div><input type="range" class="form-range" id="sC" min="15" max="120" step="1"></div>
+          <div class="mb-2"><div class="d-flex justify-content-between small"><span>Resistencia (cmH2O/l/s)</span><span class="pv" id="vR"></span></div><input type="range" class="form-range" id="sR" min="2" max="60" step="1"></div>
+          <div class="mb-2"><div class="d-flex justify-content-between small"><span>Frec. espontánea (resp/min)</span><span class="pv" id="vRate"></span></div><input type="range" class="form-range" id="sRate" min="0" max="40" step="1"></div>
+          <div class="mb-2"><div class="d-flex justify-content-between small"><span>Esfuerzo inspiratorio (cmH2O)</span><span class="pv" id="vEff"></span></div><input type="range" class="form-range" id="sEff" min="0" max="20" step="1"></div>
+          <div class="form-check form-switch mt-2"><input class="form-check-input" type="checkbox" id="swDisc"><label class="form-check-label" for="swDisc">Desconectar circuito del paciente</label></div>
+          <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="swBatt"><label class="form-check-label" for="swBatt">Falla técnica: «Batería 2: cambio necesario»</label></div>
+        </div>
+      </div>
+
+      <div class="card mb-3 shadow-sm">
+        <div class="card-header card-h"><i class="fi fi-rr-book me-2"></i>Casos de práctica</div>
+        <div class="accordion accordion-flush" id="cases"></div>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-header card-h"><i class="fi fi-rr-info me-2"></i>Cómo se programa</div>
+        <div class="card-body small" id="howto"></div>
+      </div>
+    </div>
+  </div>
+</main></main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+'use strict';
+/* ==== ENGINE START ==== */
+const DT = 0.02, NS = 600;
+
+const PARAMS = {
+  pLow:{label:'Presión baja',unit:'cmH2O',min:0,max:60,step:1,dec:0},
+  vt:{label:'Vt',unit:'ml',min:50,max:2000,step:10,dec:0},
+  freq:{label:'Frecuencia',unit:'c/min',min:1,max:80,step:1,dec:0},
+  ti:{label:'Ti',unit:'s',min:0.1,max:5,step:0.1,dec:1},
+  pausa:{label:'Tpausa',unit:'%',min:0,max:70,step:5,dec:0},
+  trigger:{label:'Trigger',unit:'l/min',min:0.5,max:15,step:0.5,dec:1},
+  peep:{label:'PEEP/CPAP',unit:'cmH2O',min:0,max:35,step:1,dec:0},
+  fio2:{label:'Oxígeno',unit:'%',min:21,max:100,step:1,dec:0},
+  psupport:{label:'ΔPsoporte',unit:'cmH2O',min:0,max:60,step:1,dec:0},
+  pcontrol:{label:'Pcontrol',unit:'cmH2O',min:5,max:60,step:1,dec:0},
+  tslope:{label:'Tslope',unit:'s',min:0,max:1.5,step:0.05,dec:2},
+  ets:{label:'ETS',unit:'%',min:5,max:80,step:5,dec:0},
+  tinspmax:{label:'Tinsp máx',unit:'s',min:0.5,max:3,step:0.1,dec:1},
+  pHigh:{label:'Presión alta',unit:'cmH2O',min:15,max:80,step:1,dec:0},
+  vminHigh:{label:'VolMinEsp alto',unit:'l/min',min:1,max:40,step:0.5,dec:1},
+  vminLow:{label:'VolMinEsp bajo',unit:'l/min',min:0.1,max:30,step:0.5,dec:1},
+  vtHigh:{label:'Vt alto',unit:'ml',min:100,max:3000,step:50,dec:0},
+  vtLow:{label:'Vt bajo',unit:'ml',min:10,max:2000,step:10,dec:0},
+  fHigh:{label:'fTotal alta',unit:'c/min',min:10,max:100,step:1,dec:0},
+  fLow:{label:'fTotal baja',unit:'c/min',min:0,max:40,step:1,dec:0},
+  tApnea:{label:'T apnea',unit:'s',min:5,max:60,step:1,dec:0},
+  height:{label:'Altura pac.',unit:'cm',min:100,max:250,step:1,dec:0}
+};
+const ALARM_KEYS = ['pHigh','vminHigh','vminLow','vtHigh','vtLow','fHigh','fLow','tApnea'];
+
+const MODES = {
+  VCCMV:{name:'VC-CMV',kind:'cmv',notrig:true,mand:'vol',params:['vt','freq','ti','pausa','peep','fio2'],quick:['vt','freq','peep','fio2'],
+    desc:'Ventilación controlada por VOLUMEN: todos los ciclos se entregan a la frecuencia ajustada, sin sensibilidad al esfuerzo del paciente (sin trigger).'},
+  PSIMV:{name:'PSIMV',kind:'simv',mand:'pres',params:['pcontrol','freq','ti','psupport','trigger','tslope','ets','tinspmax','peep','fio2'],quick:['pcontrol','freq','peep','fio2'],
+    desc:'SIMV con ciclos mandatorios por PRESIÓN (Pcontrol) sincronizados con el paciente; entre ellos, respiraciones espontáneas con presión de soporte.'},
+  SCMV:{name:'(S)CMV',kind:'cmv',mand:'vol',params:['vt','freq','ti','pausa','trigger','peep','fio2'],quick:['vt','freq','peep','fio2'],
+    desc:'Ventilación mandatoria controlada/asistida por VOLUMEN con flujo constante. Cada ciclo entrega el Vt ajustado; si el paciente dispara, recibe un ciclo completo. La presión resultante depende de compliance y resistencia.'},
+  APVCMV:{name:'APVcmv',kind:'cmv',mand:'apv',params:['vt','freq','ti','trigger','tslope','peep','fio2'],quick:['vt','freq','peep','fio2'],
+    desc:'Control de presión con volumen objetivo (APV). El ventilador ajusta la presión de cada ciclo (máx. ±3 cmH2O por ciclo) para alcanzar el Vt con la menor presión posible.'},
+  PCV:{name:'PCV+',kind:'cmv',mand:'pres',params:['pcontrol','freq','ti','trigger','tslope','peep','fio2'],quick:['pcontrol','freq','peep','fio2'],
+    desc:'Ventilación controlada/asistida por PRESIÓN. Cada ciclo mantiene Pcontrol (sobre PEEP) durante Ti; el volumen resultante depende de la mecánica pulmonar.'},
+  SIMV:{name:'SIMV',kind:'simv',mand:'vol',params:['vt','freq','ti','pausa','psupport','trigger','tslope','ets','tinspmax','peep','fio2'],quick:['vt','freq','peep','fio2'],
+    desc:'Ciclos mandatorios por volumen sincronizados con el paciente. Entre ellos, las respiraciones espontáneas reciben presión de soporte (ΔPsoporte).'},
+  APVSIMV:{name:'APVsimv',kind:'simv',mand:'apv',params:['vt','freq','ti','psupport','trigger','tslope','ets','tinspmax','peep','fio2'],quick:['vt','freq','peep','fio2'],
+    desc:'SIMV con ciclos mandatorios adaptativos (APV) y respiraciones espontáneas con presión de soporte.'},
+  SPONT:{name:'ESPONT',kind:'spont',params:['psupport','peep','fio2','trigger','tslope','ets','tinspmax'],quick:['psupport','peep','fio2'],
+    desc:'Ventilación espontánea con presión de soporte (SPONT/PSV). El paciente dispara y cicla; con apnea prolongada entra la ventilación de respaldo y suena la alarma de Apnea.'},
+  NIV:{name:'NIV',kind:'niv',params:['psupport','peep','fio2','trigger','tslope','ets','tinspmax'],quick:['psupport','peep','fio2'],
+    desc:'Ventilación no invasiva con presión de soporte y CPAP. Sin respaldo mandatorio: solo alarma de apnea.'},
+  NIVST:{name:'NIV-ST',kind:'nivst',params:['psupport','freq','ti','peep','fio2','trigger','tslope','ets','tinspmax'],quick:['psupport','freq','peep','fio2'],
+    desc:'NIV espontánea/temporizada (S/T). Si el paciente no dispara dentro del intervalo de la frecuencia de respaldo, el equipo entrega un ciclo por presión.'}
+};
+
+const ALARMS = {
+  apnea:['Apnea',2], disc:['Desconexión del paciente',2], phigh:['Presión alta',2], plow:['Presión baja',2],
+  vtlow:['Vt bajo',1], vthigh:['Vt alto',1], vminlow:['VolMinEsp bajo',1], vminhigh:['VolMinEsp alto',1],
+  fhigh:['fTotal alta',1], flow:['fTotal baja',1], batt:['Batería 2: cambio necesario',0]
+};
+
+function ibwOf(sex,h){
+  if(h<130) return Math.round(18*Math.pow(h/100,2));
+  return Math.round((sex==='M'?50:45.5)+0.91*(h-152.4));
+}
+function defaults(ibw){
+  return {mode:'SPONT',vt:Math.round(ibw*8/10)*10,freq:12,ti:1.0,pausa:0,trigger:5,peep:5,fio2:21,
+    psupport:10,pcontrol:15,tslope:0.2,ets:25,tinspmax:2.0,
+    pHigh:40,pLow:0,vminHigh:15,vminLow:3,vtHigh:1500,vtLow:200,fHigh:40,fLow:4,tApnea:15};
+}
+const avg = a => a.reduce((x,y)=>x+y,0)/a.length;
+
+class Engine{
+  constructor(){ this.onEvent=null; this.ev=[]; this.labelFn=null; this.mnameFn=null; this.reset(); }
+  lab(k){ return this.labelFn?this.labelFn(k):PARAMS[k].label; }
+  mn(id){ return this.mnameFn?this.mnameFn(id):MODES[id].name; }
+  reset(){
+    this.pt={C:50,R:10,rate:0,effort:4,tiPat:1.0,disc:false};
+    this.set=defaults(66);
+    this.techBatt=false;
+    this.flags={};
+    this.initRun();
+    this.ev.length=0;
+  }
+  initRun(){
+    this.t=0; this.running=false; this.phase='exp'; this.tp=0; this.V=0;
+    this.neu={active:false,te:0,timer:0,period:3};
+    this.br=null; this.tSince=99; this.noRespT=0; this.apnea=false; this.backup=false;
+    this.apvP=10; this.pHighUntil=0; this.trigHold=0; this.o2t=0; this.nebT=0; this.holdNext=false;
+    this.hist={iv:[],vte:[],trg:[]};
+    this.zeroMon(); this.nBreaths=0;
+    this.w={p:new Float32Array(NS).fill(NaN),q:new Float32Array(NS).fill(NaN),v:new Float32Array(NS).fill(NaN),tr:new Uint8Array(NS)};
+    this.alarms={}; this.Paw=0; this.Q=0; this.Pmus=0; this.trigNow=false; this.lastTrigT=-9;
+  }
+  zeroMon(){ this.mon={ppeak:0,pmean:0,pplat:null,peepTot:0,vte:0,vti:0,f:0,vmin:0,fsp:0,ti:0,te:0,cstat:null,r:null,peepi:0}; }
+  log(text,level){
+    const e={ts:new Date(),text,level:level||'info'};
+    this.ev.unshift(e); if(this.ev.length>200) this.ev.pop();
+    if(this.onEvent) this.onEvent(e);
+  }
+  start(){
+    this.running=true; this.phase='exp'; this.tp=0.3; this.V=this.pt.C/1000*this.set.peep;
+    this.br=null; this.tSince=99; this.noRespT=0; this.apnea=false; this.backup=false; this.apvP=10;
+    this.trigHold=this.t+0.3; this.hist={iv:[],vte:[],trg:[]}; this.zeroMon(); this.nBreaths=0;
+    this.w.p.fill(NaN); this.w.q.fill(NaN); this.w.v.fill(NaN); this.w.tr.fill(0);
+    this.log('Ventilación iniciada · '+this.mn(this.set.mode),'ok');
+  }
+  stop(){
+    this.running=false; this.br=null; this.alarms={}; this.o2t=0; this.nebT=0;
+    this.log('Standby: paciente no ventilado');
+  }
+  setParam(k,v){
+    const old=this.set[k]; if(old===v) return;
+    this.set[k]=v;
+    if(k==='peep'||k==='trigger') this.trigHold=this.t+1.5;
+    const p=PARAMS[k]; this.log(`${this.lab(k)}: ${old.toFixed(p.dec)} → ${v.toFixed(p.dec)} ${p.unit}`);
+  }
+  setMode(id){
+    const old=this.set.mode; if(old===id) return;
+    this.set.mode=id; this.apvP=10; this.tSince=99; this.apnea=false; this.backup=false; this.noRespT=0; this.trigHold=this.t+1;
+    this.log(`Modo: ${this.mn(old)} → ${this.mn(id)}`,'ok');
+  }
+  setPatient(k,v){
+    if(k==='C'){ if(this.pt.C>0) this.V*=v/this.pt.C; }
+    this.pt[k]=v;
+    if(k==='rate'&&v>0) this.neu.period=Math.min(this.neu.period,60/v*1.2);
+  }
+  manual(){
+    if(!this.running||this.phase!=='exp') return false;
+    const m=MODES[this.set.mode];
+    this.startBreath(m.mand?'mand':'backup',false);
+    this.log('Respiración manual');
+    return true;
+  }
+  activeAlarms(){
+    return Object.keys(this.alarms).sort((a,b)=>ALARMS[b][1]-ALARMS[a][1]||this.alarms[a]-this.alarms[b]);
+  }
+  /* ---- ciclo de ventilación ---- */
+  startBreath(kind,trig){
+    const s=this.set,m=MODES[s.mode],Cl=this.pt.C/1000;
+    this.finalizeBreath();
+    const b={start:this.t,trig,kind,pk:0,pkIns:0,sum:0,n:0,vIns:0,vExp:0,pplat:null,qpk:0,tiMeas:0,hit:false,
+      mand:kind!=='ps',peepi:Math.max(0,this.V/Cl-s.peep),tPause:0};
+    if(kind==='ps') b.type='ps';
+    else if(kind==='mand') b.type=m.mand;
+    else b.type='pres';
+    if(b.type==='vol'){
+      const pa=s.pausa/100;
+      b.tIns=Math.max(0.1,s.ti*(1-pa)); b.tPause=s.ti*pa+(this.holdNext?1.5:0); this.holdNext=false;
+      b.qSet=s.vt/1000/b.tIns;
+    }else if(b.type==='apv'){ b.tIns=s.ti; b.pc=this.apvP; }
+    else if(b.type==='pres'){
+      if(kind==='mand'){ b.tIns=s.ti; b.pc=s.pcontrol; }
+      else if(kind==='timed'){ b.tIns=s.ti; b.pc=Math.max(5,s.psupport); }
+      else { b.tIns=1.0; b.pc=Math.max(5,s.psupport); }
+    }else{ b.pc=s.psupport; }
+    this.br=b; this.phase='insp'; this.tp=0; this.nBreaths++;
+    if(kind!=='ps'||m.kind==='nivst') this.tSince=0;
+    if(trig){ this.noRespT=0; this.apnea=false; this.backup=false; this.trigNow=true; this.lastTrigT=this.t; }
+  }
+  toExp(Paw){
+    const b=this.br; b.tiMeas=this.t-b.start;
+    if(b.type!=='vol') b.pplat=Paw;
+    this.phase='exp'; this.tp=0;
+  }
+  finalizeBreath(){
+    const b=this.br; if(!b) return;
+    const s=this.set,mon=this.mon,Cl=this.pt.C/1000;
+    const dur=this.t-b.start, vte=this.pt.disc?0:b.vExp*1000, vti=b.vIns*1000;
+    this.hist.iv.push(dur); this.hist.vte.push(vte); this.hist.trg.push(b.trig?1:0);
+    ['iv','vte','trg'].forEach(k=>{ if(this.hist[k].length>4) this.hist[k].shift(); });
+    mon.ppeak=b.pk; mon.pmean=b.sum/Math.max(1,b.n); mon.vte=vte; mon.vti=vti;
+    mon.ti=b.tiMeas; mon.te=Math.max(0,dur-b.tiMeas); mon.peepi=b.peepi; mon.peepTot=s.peep+b.peepi;
+    mon.f=60/avg(this.hist.iv); mon.vmin=avg(this.hist.vte.slice(-3))*mon.f/1000; mon.fsp=mon.f*avg(this.hist.trg);
+    mon.pplat=(b.mand&&b.pplat!==null)?b.pplat:null; mon.cstat=null; mon.r=null;
+    if(mon.pplat!==null){
+      const d=mon.pplat-mon.peepTot; if(d>0.5) mon.cstat=vti/d;
+      if(b.type==='vol'&&b.qSet>0) mon.r=Math.max(0,(b.pkIns-mon.pplat)/b.qSet);
+    }
+    if(b.type==='apv'&&!this.pt.disc){
+      let np;
+      if(vti<=1) np=b.pc+3; else np=b.pc*(s.vt/vti);
+      np=Math.min(b.pc+3,Math.max(b.pc-3,np));
+      this.apvP=Math.max(5,Math.min(s.pHigh-10-s.peep,np));
+    }
+  }
+  step(){
+    const s=this.set,pt=this.pt,Cl=pt.C/1000,R=pt.R;
+    this.t+=DT; this.tp+=DT; this.trigNow=false;
+    if(this.o2t>0){ this.o2t-=DT; if(this.o2t<=0){ this.o2t=0; this.log('Enriquecimiento de O2 finalizado'); } }
+    if(this.nebT>0){ this.nebT-=DT; if(this.nebT<=0){ this.nebT=0; this.log('Nebulizador finalizado'); } }
+    /* esfuerzo del paciente */
+    let Pmus=0;
+    if(pt.rate>0&&pt.effort>0){
+      this.neu.timer+=DT;
+      if(!this.neu.active&&this.neu.timer>=this.neu.period){
+        this.neu.active=true; this.neu.te=0; this.neu.timer=0; this.neu.period=60/pt.rate*(0.88+0.24*Math.random());
+      }
+      if(this.neu.active){
+        this.neu.te+=DT; Pmus=pt.effort*Math.sin(Math.PI*this.neu.te/pt.tiPat);
+        if(this.neu.te>=pt.tiPat){ this.neu.active=false; Pmus=0; }
+      }
+    }else this.neu.active=false;
+    this.Pmus=Pmus;
+    let Paw=0,Q=0;
+    if(!this.running){
+      this.V-=this.V/(R*Cl)*DT;
+    }else{
+      this.noRespT+=DT; this.tSince+=DT;
+      const m=MODES[s.mode];
+      if(this.phase==='exp'){
+        if(pt.disc){ Paw=0.5; Q=0; this.V-=this.V/(R*Cl)*DT; }
+        else{ Paw=s.peep; Q=(Paw+Pmus-this.V/Cl)/R; this.V+=Q*DT; }
+        if(this.br&&Q<0) this.br.vExp+=-Q*DT;
+        const Tc=60/s.freq;
+        const canTrig=this.tp>=0.3&&this.t>=this.trigHold&&!pt.disc;
+        const tg=canTrig&&!m.notrig&&s.trigger>0&&((Q*60+1.2*Math.sin(6.2832*1.3*this.t))>=s.trigger);
+        let start=null,trig=false;
+        switch(m.kind){
+          case 'cmv': if(tg){start='mand';trig=true;} else if(this.tSince>=Tc) start='mand'; break;
+          case 'simv': if(this.tSince>=Tc) start='mand'; else if(tg){trig=true;start=(this.tSince>=0.75*Tc)?'mand':'ps';} break;
+          case 'spont': if(tg){start='ps';trig=true;} else if(this.backup&&this.tSince>=5) start='backup'; break;
+          case 'niv': if(tg){start='ps';trig=true;} break;
+          case 'nivst': if(tg){start='ps';trig=true;} else if(this.tSince>=Tc) start='timed'; break;
+        }
+        if(start) this.startBreath(start,trig);
+        if((m.kind==='spont'||m.kind==='niv')&&!this.apnea&&this.noRespT>=s.tApnea){
+          this.apnea=true; if(m.kind==='spont'){ this.backup=true; this.tSince=99; }
+        }
+      }else if(this.phase==='insp'){
+        const b=this.br; let endIns=false;
+        if(pt.disc){ Paw=0.5; Q=b.type==='vol'?b.qSet:0.8; this.V-=this.V/(R*Cl)*DT; }
+        else{
+          if(b.type==='vol'){ Q=b.qSet; Paw=Math.max(0,this.V/Cl+R*Q-Pmus); }
+          else{
+            const ramp=s.tslope<=0.02?1:Math.min(1,this.tp/s.tslope);
+            Paw=s.peep+b.pc*ramp; Q=(Paw+Pmus-this.V/Cl)/R;
+          }
+          if(Paw>=s.pHigh){
+            Paw=s.pHigh; b.hit=true; this.pHighUntil=this.t+6;
+            if(b.type==='vol'){ Q=Math.max(0,(Paw+Pmus-this.V/Cl)/R); endIns=true; }
+          }
+          this.V+=Q*DT;
+        }
+        if(Q>0) b.vIns+=Q*DT;
+        b.pk=Math.max(b.pk,Paw); b.sum+=Paw; b.n++;
+        let end=endIns;
+        if(b.type==='ps'){
+          b.qpk=Math.max(b.qpk,Q);
+          if(this.tp>=0.1&&b.qpk>0.03&&Q<=Math.max(0.01,b.qpk*s.ets/100)) end=true;
+          if(this.tp>=s.tinspmax) end=true;
+        }else if(this.tp>=b.tIns) end=true;
+        if(end){
+          b.pkIns=b.pk;
+          if(b.type==='vol'&&b.tPause>0&&!endIns){ this.phase='pause'; this.tp=0; }
+          else this.toExp(Paw);
+        }
+      }else{ /* pausa inspiratoria */
+        const b=this.br;
+        Paw=pt.disc?0.5:Math.max(0,this.V/Cl-Pmus); Q=0;
+        b.pk=Math.max(b.pk,Paw); b.sum+=Paw; b.n++;
+        if(this.tp>=b.tPause){ b.pplat=Paw; this.toExp(Paw); }
+      }
+    }
+    this.Paw=Paw; this.Q=Q;
+    /* curvas */
+    if(this.running){
+      const w=this.w, idx=Math.floor((this.t%12)/DT)%NS;
+      w.p[idx]=Paw; w.q[idx]=Q*60; w.v[idx]=pt.disc?0:(this.V-Cl*s.peep)*1000; w.tr[idx]=this.trigNow?1:0;
+      for(let k=1;k<=22;k++){ const j=(idx+k)%NS; w.p[j]=NaN; w.q[j]=NaN; w.v[j]=NaN; w.tr[j]=0; }
+    }
+    this.evalAlarms();
+  }
+  evalAlarms(){
+    const s=this.set,m=this.mon,on={};
+    if(this.running){
+      on.apnea=this.apnea; on.disc=pt_(this); on.phigh=this.t<this.pHighUntil;
+      if(this.hist.vte.length>=1){
+        on.plow=s.pLow>0&&m.ppeak<s.pLow; on.vtlow=m.vte<s.vtLow; on.vthigh=m.vte>s.vtHigh;
+        on.vminlow=m.vmin<s.vminLow; on.vminhigh=m.vmin>s.vminHigh;
+        if(this.hist.iv.length>=2){ on.fhigh=m.f>s.fHigh; on.flow=m.f<s.fLow; }
+      }
+    }
+    on.batt=this.techBatt;
+    for(const id in ALARMS){
+      const was=!!this.alarms[id], is=!!on[id];
+      if(is&&!was){ this.alarms[id]=this.t||0.001; this.log('Alarma: '+ALARMS[id][0],'alarm'); if(id==='disc') this.flags.discSeen=true; if(id==='apnea') this.flags.apneaSeen=true; }
+      else if(!is&&was){ delete this.alarms[id]; this.log('Resuelta: '+ALARMS[id][0],'ok'); }
+    }
+  }
+}
+function pt_(e){ return e.pt.disc; }
+/* ==== ENGINE END ==== */
+
+/* ===================== INTERFAZ ===================== */
+const $ = (s,r=document)=>r.querySelector(s), $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+const eng = new Engine();
+let shellId='T1', shell=null;
+const view = {k:1};
+const ui = {win:null,sel:null,pend:null,modeSel:null,locked:false,night:false,frozen:false,snap:null,silUntil:0,
+  dialog:null,sbtab:'new',vol:6,bright:100,alarmIdx:0,alarmSwitch:0};
+const dev = {state:'off',sex:'M',height:170,ibw:66,sbStart:0,lastPatient:null,
+  preop:{leak:{st:0,t0:0},flow:{st:0,t0:0},o2:{st:0,t0:0}},preopOk:false,flags:{}};
+const refs = {};
+
+const fmt = (v,d=0)=>Number(v).toFixed(d);
+const getVal = k => k==='height'?dev.height:eng.set[k];
+const recalc = ()=>{ dev.ibw=ibwOf(dev.sex,dev.height); eng.set.vt=Math.round(dev.ibw*8/10)*10; };
+eng.set.vt=Math.round(dev.ibw*8/10)*10;
+eng.onEvent = ()=>{ if(ui.win==='events') render(); };
+
+/* ---------- iconos SVG ---------- */
+const svgWarn = '<svg width="54" height="48" viewBox="0 0 54 48"><path d="M27 3 51 45H3z" fill="none" stroke="#111" stroke-width="4" stroke-linejoin="round"/><path d="M27 18v14" stroke="#111" stroke-width="4" stroke-linecap="round"/><circle cx="27" cy="38" r="2.6" fill="#111"/></svg>';
+const svgMan = '<svg width="24" height="46" viewBox="0 0 24 46" style="margin-right:10px"><circle cx="12" cy="6" r="5" fill="currentColor"/><path d="M6 14h12v16h-3v14h-2.5V32h-1V44H9V30H6z" fill="currentColor"/></svg>';
+const svgWoman = '<svg width="24" height="46" viewBox="0 0 24 46" style="margin-right:10px"><circle cx="12" cy="6" r="5" fill="currentColor"/><path d="M7 14h10l3 16h-4v14h-2.5V32h-1V44H8V30H4z" fill="currentColor"/></svg>';
+const svgBat = c=>`<svg class="bt" viewBox="0 0 22 30"><rect x="3" y="4" width="16" height="24" rx="2" fill="none" stroke="#bbb" stroke-width="2"/><rect x="8" y="1" width="6" height="3" fill="#bbb"/><rect x="5.5" y="${c==='r'?22:10}" width="11" height="${c==='r'?4:16}" fill="${c==='r'?'#ff5a4d':'#4fe05a'}"/></svg>`;
+
+/* ---------- construcción de la pantalla ---------- */
+function circle(k){
+  const p=P(k), sel=ui.sel===k, pend=sel&&ui.pend!==null;
+  const boost=(k==='fio2'&&eng.o2t>0);
+  const v=boost?100:(pend?ui.pend:getVal(k));
+  return `<div class="cc ${sel?'sel':''} ${pend?'pend':''} ${boost?'boost':''}" data-k="${k}"><div class="ring"><b>${fmt(v,p.dec)}</b><small>${p.unit}</small></div><span>${lbl(k)}</span></div>`;
+}
+function topbarHTML(){
+  return `<div id="topbar"><div class="t-mode" style="font-size:${mname(eng.set.mode).length>9?20:27}px">${mname(eng.set.mode)}</div><div class="t-msg" id="tmsg"></div><div class="t-btn" data-win="modes">Modos</div></div>`;
+}
+function sideHTML(){
+  const m=MODES[eng.set.mode];
+  return `<div class="side ${m.quick.length>3?'compact':''}">${m.quick.map(circle).join('')}<div class="s-spacer"></div>
+    <div class="s-btn ${ui.win==='ctrl'?'on':''}" data-win="ctrl">Controles</div>
+    <div class="s-btn ${ui.win==='alarm'?'on':''}" data-win="alarm">Alarmas</div></div>`;
+}
+function bottomHTML(){
+  const tabs=[['monit','Monitorización',178],['tools','Herramientas',150],['events','Eventos',116],['system','Sistema',116]];
+  return `<div class="bottom">${tabs.map(t=>`<div class="b-tab ${ui.win===t[0]?'on':''}" style="width:${t[2]}px" data-win="${t[0]}">${t[1]}</div>`).join('')}
+    <div class="b-ico"><span id="bo2"></span><span id="bneb"></span><span id="bsil"></span>
+    ${ui.locked?'<svg viewBox="0 0 24 24" fill="none" stroke="#fc6" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>':''}
+    ${ui.frozen?'<span style="color:#9fd8ff">❄</span>':''}
+    ${svgBat('g')}${svgBat(eng.techBatt?'r':'g')}</div></div>`;
+}
+function runHTML(){
+  return `<div class="run">
+    <div class="nums">
+      <div class="num"><b id="nP">0.0</b><span>Ppico</span><em>cmH2O</em></div>
+      <div class="num"><b id="nV">0.0</b><span>VolMinEsp</span><em>l/min</em></div>
+      <div class="num"><b id="nE">0.0</b><span>VTE</span><em>ml</em></div>
+      <div class="num"><b id="nF">0</b><span>fTotal</span><em>c/min</em></div>
+    </div>
+    <canvas class="cw" id="cP" style="top:0"></canvas><canvas class="cw" id="cQ" style="top:159px"></canvas><canvas class="cw" id="cV" style="top:318px"></canvas>
+  </div>`;
+}
+function standbyHTML(){
+  const pre=dev.preopOk;
+  const lastCls=ui.sbtab==='last'?'on':'';
+  return `<div class="sb">
+    <div class="sb-banner"><div class="sb-title">${svgWarn}<span>Standby</span></div><div class="sb-time" id="sbT">00:00:00</div>
+      <div class="sb-txt">El paciente no está siendo ventilado.<br>Desactive el humidificador.</div></div>
+    <div class="sb-tabs"><div class="sb-tab ${ui.sbtab==='new'?'on':''}" data-act="sbtab" data-v="new">Adulto/Ped.</div><div class="sb-tab ${lastCls}" data-act="sbtab" data-v="last">Últ. paciente</div></div>
+    <div class="sb-pat">
+      <div class="lbl">Adulto/Ped.</div>
+      <div class="sexb ${dev.sex==='M'?'on':''}" style="left:176px" data-act="sex" data-v="M">${svgMan}Hombre</div>
+      <div class="sexb ${dev.sex==='F'?'on':''}" style="left:344px" data-act="sex" data-v="F">${svgWoman}Mujer</div>
+      <div class="hring">${circle('height')}</div>
+      <div class="pci"><span>${dev.ibw}</span><small>PCI<br>kg</small></div>
+    </div>
+    <div class="sb-act">
+      <div class="sbtn pre ${pre?'ok':''}" data-act="preop">Compr. Prev${pre?' ✔':''}</div>
+      <div class="sbtn go" data-act="start">Comenzar ventilación</div>
+      <div class="sb-hint">Para desconectar, pulse tecla encendido/standby durante más de 3 s</div>
+    </div>
+  </div>`;
+}
+const winWrap=(title,body)=>`<div class="win"><div class="win-h">${title}<span class="x" data-act="close">✕</span></div><div class="win-b">${body}</div></div>`;
+function monRow(l,k,u){ return `<tr><td>${l}</td><td data-m="${k}">--</td><td>${u}</td></tr>`; }
+function windowHTML(w){
+  const s=eng.set,m=MODES[s.mode];
+  switch(w){
+    case 'ctrl': return winWrap('Controles · '+mname(s.mode),`<div class="grid4">${m.params.map(circle).join('')}</div>`);
+    case 'alarm': {
+      const act=eng.activeAlarms();
+      return winWrap('Alarmas',`<div class="arow">${act.length?act.map(id=>`<span class="achip ${ALARMS[id][1]===2?'r':''}">${ALARMS[id][0]}</span>`).join(''):'<span style="color:#9fb0c6">Sin alarmas activas</span>'}</div>
+        <div class="grid4">${ALARM_KEYS.map(circle).join('')}</div>`);
+    }
+    case 'modes': {
+      const sel=ui.modeSel||s.mode;
+      return winWrap('Modos de ventilación',`<div class="mgrid">${shell.modes.map(id=>`<div class="mbtn ${id===s.mode?'cur':''} ${id===sel?'on':''}" data-act="mode" data-v="${id}">${mname(id)}</div>`).join('')}</div>
+        <div class="mdesc"><b>${mname(sel)}</b> — ${MODES[sel].desc}<br><span style="color:#9fb0c6">Controles: ${MODES[sel].params.map(k=>lbl(k)).join(', ')}.</span></div>
+        <div class="btnrow"><div class="wbtn ${sel===s.mode?'dis':''}" data-act="modeOk">Confirmar</div><div class="wbtn gray" data-act="close">Cancelar</div></div>`);
+    }
+    case 'monit': return winWrap('Monitorización',`<div class="mt-2"><table class="mt">
+      ${monRow('Ppico','ppeak','cmH2O')}${monRow('Pmeseta','pplat','cmH2O')}${monRow('Pmedia','pmean','cmH2O')}${monRow('PEEP total','peepTot','cmH2O')}${monRow('PEEP intrínseca','peepi','cmH2O')}${monRow('Oxígeno','fio2','%')}${monRow('Cest','cstat','ml/cmH2O')}${monRow('Resistencia','r','cmH2O/l/s')}</table>
+      <table class="mt">${monRow('VTE','vte','ml')}${monRow('Vti','vti','ml')}${monRow('VolMinEsp','vmin','l/min')}${monRow('fTotal','f','c/min')}${monRow('fEsp','fsp','c/min')}${monRow('Ti','ti','s')}${monRow('Te','te','s')}${monRow('I:E','ie','')}</table></div>`);
+    case 'tools': {
+      const run=eng.running;
+      return winWrap('Herramientas',`<div class="tgrid">
+        <div class="tbtn ${run?'dis':''}" style="${run?'opacity:.4':''}" data-act="${run?'':'preop'}">Compr. Prev<small>Estanqueidad y calibraciones (solo en Standby)</small></div>
+        <div class="tbtn" data-act="hold">Pausa inspiratoria<small>1,5 s extra en el próximo ciclo volumétrico</small></div>
+        <div class="tbtn ${ui.frozen?'act':''}" data-act="freeze">${ui.frozen?'Descongelar curvas':'Congelar curvas'}<small>Detiene el barrido de las curvas</small></div>
+        <div class="tbtn" data-act="manual">Respiración manual<small>Un ciclo inmediato</small></div>
+        <div class="tbtn ${eng.nebT>0?'act':''}" data-act="neb">Nebulizador<small>${eng.nebT>0?'Activo · pulse para detener':'10 min'}</small></div>
+        <div class="tbtn ${eng.o2t>0?'act':''}" data-act="o2">O₂ 100 %<small>${eng.o2t>0?'Activo · pulse para cancelar':'Enriquecimiento durante 2 min'}</small></div></div>`);
+    }
+    case 'events': return winWrap('Eventos',`<table class="evl">${eng.ev.length?eng.ev.slice(0,80).map(e=>`<tr class="${e.level}"><td>${e.ts.toLocaleTimeString('es-MX',{hour12:false})}</td><td>${e.text}</td></tr>`).join(''):'<tr><td colspan="2" style="color:#9fb0c6">Sin eventos registrados.</td></tr>'}</table>`);
+    case 'system': return winWrap('Sistema',`
+      <div class="sysr"><span style="width:120px">Volumen alarma</span><input type="range" min="0" max="10" value="${ui.vol}" data-sys="vol"><b id="sysVol" style="width:30px">${ui.vol}</b></div>
+      <div class="sysr"><span style="width:120px">Brillo</span><input type="range" min="25" max="100" value="${ui.bright}" data-sys="bright"><b id="sysBr" style="width:30px">${ui.bright}</b></div>
+      <table class="mt" style="margin-top:8px"><tr><td>Batería 1</td><td>Carga 78 %</td><td></td></tr><tr><td>Batería 2</td><td style="color:${eng.techBatt?'#ff8f87':'#8fe27a'}">${eng.techBatt?'Cambio necesario':'Carga 64 %'}</td><td></td></tr>
+      <tr><td>Equipo</td><td>Hamilton-T1 (simulador)</td><td></td></tr><tr><td>Idioma</td><td>Español</td><td></td></tr><tr><td>Paciente</td><td>${dev.sex==='M'?'Hombre':'Mujer'} · ${dev.height} cm</td><td>PCI ${dev.ibw} kg</td></tr></table>`);
+    case 'preop': {
+      const T=[['leak','Prueba de estanqueidad','Conecte el circuito y ocluya la pieza en Y'],['flow','Calibración del sensor de flujo','Conecte el sensor de flujo al circuito'],['o2','Calibración de celda de O₂','Dejar la celda expuesta a aire ambiente']];
+      return winWrap('Verificación preoperacional',T.map(t=>{
+        const st=dev.preop[t[0]].st;
+        return `<div class="prow"><div class="nm">${t[1]}<small>${t[2]}</small></div>${st===1?`<div class="pb"><i id="pb-${t[0]}"></i></div><span class="chip run">En curso</span>`:st===2?'<span class="chip ok">Aprobado ✔</span>':`<div class="wbtn" style="padding:6px 16px;font-size:15px" data-act="pre" data-v="${t[0]}">Iniciar</div>`}</div>`;
+      }).join('')+`<div style="margin-top:14px;font-size:14px;color:#cfd8e5">${dev.preopOk?'<b style="color:#8fe27a">Verificación completa.</b> El circuito está listo.':'Realice las tres pruebas antes de ventilar a un paciente.'}</div>
+        <div class="btnrow"><div class="wbtn gray" data-act="close">Cerrar</div></div>`);
+    }
+  }
+  return '';
+}
+function overlayHTML(){
+  const d=ui.dialog; if(!d) return '';
+  return `<div class="dlg"><div><h4>${d.title}</h4><p>${d.text}</p><div class="btnrow"><div class="wbtn" data-act="dlgOk">${d.ok}</div><div class="wbtn gray" data-act="dlgNo">Cancelar</div></div></div></div>`;
+}
+function render(){
+  if(shell&&shell.type==='panel'){ renderLTV(); return; }
+  const scr=$('#screen'); scr.classList.toggle('night',ui.night);
+  scr.style.setProperty('--br',ui.night?0.38:ui.bright/100);
+  Object.keys(refs).forEach(k=>delete refs[k]);
+  if(dev.state==='off'){ scr.innerHTML='<div class="off">Equipo apagado<br>Pulse la tecla de encendido (verde) para iniciar</div>'; keyLeds(); return; }
+  if(dev.state==='boot'){ scr.innerHTML='<div class="boot"><h1>HAMILTON·T1</h1><p>Autochequeo del sistema…</p><div class="bar"><i></i></div></div>'; keyLeds(); return; }
+  let content;
+  if(ui.win) content=windowHTML(ui.win); else content=eng.running?runHTML():standbyHTML();
+  scr.innerHTML=topbarHTML()+`<div class="content">${content}${ui.sel?'<div class="hintbar">Gire el mando para ajustar · pulse el mando para confirmar</div>':''}</div>`+sideHTML()+bottomHTML()+overlayHTML();
+  refs.msg=$('#tmsg'); refs.nP=$('#nP'); refs.nV=$('#nV'); refs.nE=$('#nE'); refs.nF=$('#nF');
+  refs.cP=$('#cP'); refs.cQ=$('#cQ'); refs.cV=$('#cV'); refs.sbT=$('#sbT');
+  refs.bsil=$('#bsil'); refs.bneb=$('#bneb'); refs.bo2=$('#bo2'); refs.m=$$('[data-m]');
+  keyLeds();
+}
+function keyLeds(){
+  $$('.key').forEach(k=>{ const n=k.dataset.key; k.classList.toggle('on',(n==='night'&&ui.night)||(n==='lock'&&ui.locked)||(n==='freeze'&&ui.frozen)||(n==='o2'&&eng.o2t>0)||(n==='neb'&&eng.nebT>0)); });
+  $('#led2').className=eng.techBatt?'warn':(dev.state==='off'?'':'on');
+  $('#led1').className=dev.state==='off'?'':'on';
+  const on=eng.activeAlarms().length>0&&dev.state!=='off';
+  $('#silLed').classList.toggle('on',on&&dev.state!=='boot');
+}
+function toast(msg){
+  if(/bloquead|Solo |Pase |Mantenga|Espere|No hay|Disponible/i.test(msg)&&!/desbloquead/i.test(msg)) Snd.err();
+  if(shell&&shell.type==='panel'){ ltvMsg(msg.toUpperCase(),2200,true); return; }
+  const el=document.createElement('div'); el.className='toast-s'; el.textContent=msg; $('#screen').appendChild(el); setTimeout(()=>el.remove(),2300);
+}
+
+/* ---------- edición de parámetros ---------- */
+function selectParam(k){ ui.sel=k; ui.pend=getVal(k); render(); }
+function cancelEdit(){ ui.sel=null; ui.pend=null; }
+function rotate(dir){
+  if(dev.state!=='standby'&&dev.state!=='run') return;
+  if(ui.locked){ toast('Pantalla bloqueada · pulse la tecla del candado'); return; }
+  if(!ui.sel) return;
+  const p=P(ui.sel); let v=ui.pend+dir*p.step;
+  v=Math.min(p.max,Math.max(p.min,v)); v=+(Math.round(v/p.step)*p.step).toFixed(p.dec+1);
+  if(v===ui.pend) Snd.limit(); else Snd.tick();
+  ui.pend=v; render();
+}
+function confirmEdit(){
+  const k=ui.sel; if(!k) return; const v=ui.pend; Snd.ok();
+  if(k==='height'){ if(v!==dev.height){ dev.height=v; recalc(); eng.log('Altura del paciente: '+v+' cm · PCI '+dev.ibw+' kg'); } }
+  else eng.setParam(k,v);
+  cancelEdit(); render();
+}
+function press(){
+  if(ui.dialog){ A.dlgOk(); return; }
+  if(ui.sel){ confirmEdit(); return; }
+  if(ui.win==='modes') A.modeOk();
+}
+
+/* ---------- acciones ---------- */
+function doPre(id){
+  const o=dev.preop[id]; if(o.st!==0) return;
+  o.st=1; o.t0=performance.now(); render();
+  setTimeout(()=>{
+    o.st=2; Snd.ok(); eng.log('Compr. Prev: '+({leak:'estanqueidad',flow:'sensor de flujo',o2:'celda de O2'})[id]+' aprobado','ok');
+    if(Object.values(dev.preop).every(x=>x.st===2)&&!dev.preopOk){ dev.preopOk=true; eng.log('Verificación preoperacional completa','ok'); }
+    if(dev.state==='standby') render();
+  },3200);
+}
+function tryStart(){
+  if(!dev.preopOk){
+    ui.dialog={title:'Verificación preoperacional',text:'No se completó la Compr. Prev. del circuito. ¿Iniciar la ventilación de todos modos?',ok:'Iniciar',onOk:doStart};
+    render(); return;
+  }
+  doStart();
+}
+function doStart(){
+  Snd.start();
+  dev.lastPatient={sex:dev.sex,height:dev.height};
+  eng.start(); dev.state='run'; ui.win=null; cancelEdit(); render();
+}
+function toStandby(){
+  Snd.stdby();
+  eng.stop(); dev.state='standby'; dev.sbStart=Date.now(); ui.win=null; cancelEdit(); render();
+}
+function doManual(){
+  if(dev.state!=='run'){ toast('Solo durante la ventilación'); return; }
+  toast(eng.manual()?'Respiración manual':'Espere a la fase espiratoria');
+}
+function toggleO2(){
+  if(dev.state!=='run'){ toast('Solo durante la ventilación'); return; }
+  eng.o2t=eng.o2t>0?0:120; eng.log(eng.o2t>0?'Enriquecimiento de O2: 100 % por 2 min':'Enriquecimiento de O2 cancelado'); render();
+}
+function toggleNeb(){
+  if(dev.state!=='run'){ toast('Solo durante la ventilación'); return; }
+  eng.nebT=eng.nebT>0?0:600; eng.log(eng.nebT>0?'Nebulizador activado (10 min)':'Nebulizador detenido'); render();
+}
+function toggleFreeze(){
+  if(dev.state!=='run'){ toast('Solo durante la ventilación'); return; }
+  ui.frozen=!ui.frozen;
+  ui.snap=ui.frozen?{p:eng.w.p.slice(),q:eng.w.q.slice(),v:eng.w.v.slice(),tr:eng.w.tr.slice()}:null; render();
+}
+function toggleSil(){
+  if(ui.silUntil>Date.now()){ ui.silUntil=0; eng.log('Silencio de alarma cancelado'); }
+  else{ Snd.sil(); ui.silUntil=Date.now()+120000; eng.log('Alarma silenciada 2 min'); if(eng.alarms.disc) dev.flags.silDisc=true; if(eng.alarms.apnea) dev.flags.silApnea=true; }
+  keyLeds();
+}
+const A={
+  close(){ ui.win=null; cancelEdit(); render(); },
+  win(v){ ui.win=(ui.win===v)?null:v; ui.modeSel=null; cancelEdit(); render(); },
+  mode(v){ ui.modeSel=v; render(); },
+  modeOk(){ const id=ui.modeSel||eng.set.mode; eng.setMode(id); ui.modeSel=null; ui.win=null; render(); },
+  sex(v){ dev.sex=v; recalc(); render(); },
+  sbtab(v){
+    if(v==='last'){
+      if(dev.lastPatient){ dev.sex=dev.lastPatient.sex; dev.height=dev.lastPatient.height; recalc(); ui.sbtab='new'; render(); toast('Datos del último paciente cargados'); }
+      else toast('No hay datos de un paciente anterior');
+    }else{ ui.sbtab='new'; render(); }
+  },
+  start(){ tryStart(); },
+  preop(){ if(eng.running) return; ui.win='preop'; cancelEdit(); render(); },
+  pre(v){ doPre(v); },
+  hold(){ if(!eng.running){ toast('Disponible durante la ventilación'); return; } eng.holdNext=true; toast('Pausa inspiratoria en el próximo ciclo volumétrico'); },
+  freeze(){ toggleFreeze(); }, manual(){ doManual(); }, neb(){ toggleNeb(); }, o2(){ toggleO2(); },
+  dlgOk(){ const d=ui.dialog; ui.dialog=null; render(); if(d&&d.onOk) d.onOk(); },
+  dlgNo(){ ui.dialog=null; render(); }
+};
+$('#screen').addEventListener('click',e=>{
+  initAudio();
+  const el=e.target.closest('[data-act],[data-k],[data-win]'); if(!el) return;
+  if(ui.locked){ toast('Pantalla bloqueada · pulse la tecla del candado'); return; }
+  if(el.dataset.k){ Snd.tap(); selectParam(el.dataset.k); return; }
+  if(el.dataset.win){ Snd.tap(); A.win(el.dataset.win); return; }
+  Snd.tap();
+  const f=A[el.dataset.act]; if(f) f(el.dataset.v);
+});
+$('#screen').addEventListener('input',e=>{
+  const s=e.target.dataset.sys; if(!s) return;
+  if(s==='vol'){ setVol(+e.target.value); Snd.tick(); }
+  if(s==='bright'){ ui.bright=+e.target.value; $('#sysBr').textContent=ui.bright; $('#screen').style.setProperty('--br',ui.night?0.38:ui.bright/100); }
+});
+
+/* ---------- teclas físicas ---------- */
+const K={
+  night(){ if(dev.state==='off'||dev.state==='boot') return; ui.night=!ui.night; render(); },
+  lock(){ if(dev.state==='off'||dev.state==='boot') return; ui.locked=!ui.locked; if(ui.locked) cancelEdit(); render(); toast(ui.locked?'Pantalla bloqueada':'Pantalla desbloqueada'); },
+  manual:doManual, o2:toggleO2, neb:toggleNeb, freeze:toggleFreeze,
+  sil(){ if(dev.state==='off'||dev.state==='boot') return; toggleSil(); }
+};
+$$('.key').forEach(b=>b.addEventListener('click',()=>{ initAudio(); Snd.click(); K[b.dataset.key](); }));
+(function(){
+  const pwr=$('#pwr'); let tm=null;
+  const short=()=>{
+    if(dev.state==='off') powerOn();
+    else if(dev.state==='standby') toast('Mantenga pulsado más de 3 s para apagar');
+    else if(dev.state==='run'){ ui.dialog={title:'Standby',text:'¿Pasar a Standby? El paciente dejará de ser ventilado.',ok:'Aceptar',onOk:toStandby}; render(); }
+  };
+  const long=()=>{
+    if(dev.state==='off') powerOn();
+    else if(dev.state==='standby') powerOff();
+    else if(dev.state==='run') toast('Pase primero a Standby para apagar el equipo');
+  };
+  pwr.addEventListener('pointerdown',()=>{ initAudio(); pwr.classList.add('hold'); tm=setTimeout(()=>{ tm=null; long(); },3000); });
+  pwr.addEventListener('pointerup',()=>{ pwr.classList.remove('hold'); if(tm){ clearTimeout(tm); tm=null; short(); } });
+  pwr.addEventListener('pointerleave',()=>{ pwr.classList.remove('hold'); if(tm){ clearTimeout(tm); tm=null; } });
+})();
+function powerOn(){
+  Snd.on(); dev.state='boot'; render(); eng.log('Equipo encendido');
+  setTimeout(()=>{ if(dev.state!=='boot') return; dev.state='standby'; dev.sbStart=Date.now(); render(); },3500);
+}
+function powerOff(){ Snd.off(); eng.stop(); dev.state='off'; ui.win=null; ui.locked=false; ui.frozen=false; cancelEdit(); render(); }
+
+/* ---------- mando rotatorio ---------- */
+(function(){
+  const k=$('#knob'), kin=$('#knobIn'); let a0=null,acc=0,moved=0,t0=0,rot=0;
+  const ang=e=>{ const r=k.getBoundingClientRect(); return Math.atan2(e.clientY-(r.top+r.height/2),e.clientX-(r.left+r.width/2))*180/Math.PI; };
+  k.addEventListener('pointerdown',e=>{ initAudio(); k.setPointerCapture(e.pointerId); a0=ang(e); acc=0; moved=0; t0=performance.now(); });
+  k.addEventListener('pointermove',e=>{
+    if(a0===null) return; const a=ang(e); let d=a-a0; if(d>180) d-=360; if(d<-180) d+=360; a0=a;
+    moved+=Math.abs(d); acc+=d; rot+=d; kin.style.transform=`rotate(${rot}deg)`;
+    while(acc>=16){ acc-=16; rotate(1); } while(acc<=-16){ acc+=16; rotate(-1); }
+  });
+  k.addEventListener('pointerup',()=>{ if(a0!==null&&moved<8&&performance.now()-t0<600) press(); a0=null; });
+  k.addEventListener('pointercancel',()=>{ a0=null; });
+  k.addEventListener('wheel',e=>{ e.preventDefault(); rotate(e.deltaY<0?1:-1); kin.style.transform=`rotate(${rot+=e.deltaY<0?16:-16}deg)`; },{passive:false});
+  $('#kPlus').addEventListener('click',()=>{ rotate(1); kin.style.transform=`rotate(${rot+=16}deg)`; });
+  $('#kMinus').addEventListener('click',()=>{ rotate(-1); kin.style.transform=`rotate(${rot-=16}deg)`; });
+  $('#kOk').addEventListener('click',press);
+})();
+document.addEventListener('keydown',e=>{
+  if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+  if(e.key==='ArrowRight'||e.key==='ArrowUp'){ rotate(1); e.preventDefault(); }
+  else if(e.key==='ArrowLeft'||e.key==='ArrowDown'){ rotate(-1); e.preventDefault(); }
+  else if(e.key==='Enter') press();
+  else if(e.key==='Escape'){ if(ui.sel){ cancelEdit(); render(); } else if(ui.win){ A.close(); } }
+});
+
+/* ---------- audio: alarmas por prioridad, teclas, mando y encendido ---------- */
+const Snd={
+  ctx:null,out:null,muted:false,flow:null,
+  init(){
+    if(!this.ctx){
+      try{
+        const C=window.AudioContext||window.webkitAudioContext; this.ctx=new C();
+        this.out=this.ctx.createGain(); const cmp=this.ctx.createDynamicsCompressor();
+        this.out.connect(cmp); cmp.connect(this.ctx.destination); this.apply();
+      }catch(e){ this.ctx=null; }
+    }
+    if(this.ctx&&this.ctx.state==='suspended') this.ctx.resume();
+  },
+  apply(){ if(this.out) this.out.gain.value=this.muted?0:Math.pow(ui.vol/10,1.6); },
+  tone(f,d,o){
+    o=o||{}; if(!this.ctx||this.muted||ui.vol<=0) return;
+    const c=this.ctx,t=c.currentTime+(o.t||0),a=o.a||0.004,r=o.r||0.03,pk=o.g||0.25,g=c.createGain();
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(pk,t+a);
+    g.gain.setValueAtTime(pk,t+Math.max(a,d-r)); g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    g.connect(this.out);
+    const mk=(fr,ty,gain)=>{
+      const os=c.createOscillator(); os.type=ty; os.frequency.setValueAtTime(fr,t);
+      if(o.to) os.frequency.exponentialRampToValueAtTime(o.to,t+d);
+      if(gain!==1){ const gg=c.createGain(); gg.gain.value=gain; os.connect(gg); gg.connect(g); } else os.connect(g);
+      os.start(t); os.stop(t+d+0.03);
+    };
+    mk(f,o.type||'sine',1); if(o.h) mk(f*2,'sine',o.h);
+  },
+  profile(){
+    const P={T1:{f:880,type:'sine',h:.4,g:.28},LTV:{f:1000,type:'square',h:0,g:.1},OXY:{f:800,type:'triangle',h:.3,g:.3},
+      SV300:{f:840,type:'sine',h:.35,g:.28},PB980:{f:720,type:'triangle',h:.3,g:.3},SERVO:{f:960,type:'sine',h:.3,g:.28}};
+    return P[shellId]||P.T1;
+  },
+  click(){ const l=shellId==='LTV'; this.tone(l?1500:1900,.02,{type:'square',g:.05,a:.001,r:.006}); this.tone(l?120:160,.04,{g:.14,a:.001,r:.02}); },
+  tap(){ this.tone(1500,.022,{g:.07,a:.001,r:.008}); },
+  tick(){ this.tone(2400,.012,{g:.06,a:.001,r:.004}); },
+  limit(){ this.tone(300,.07,{type:'triangle',g:.12}); },
+  ok(){ this.tone(1175,.07,{g:.16}); this.tone(1568,.11,{t:.07,g:.16}); },
+  err(){ this.tone(220,.12,{type:'square',g:.07}); this.tone(185,.16,{t:.13,type:'square',g:.07}); },
+  on(){ [1047,1319,1568,2093].forEach((f,i)=>this.tone(f,.14,{t:i*.1,g:.14})); },
+  off(){ [1568,1175,784].forEach((f,i)=>this.tone(f,.14,{t:i*.1,g:.14})); },
+  start(){ this.tone(880,.09,{g:.16}); this.tone(1318,.15,{t:.1,g:.16}); },
+  stdby(){ this.tone(1318,.09,{g:.16}); this.tone(880,.15,{t:.1,g:.16}); },
+  sil(){ this.tone(700,.08,{g:.14}); this.tone(520,.12,{t:.09,g:.14}); },
+  flowStart(){
+    if(!this.ctx||this.flow) return; const c=this.ctx,len=c.sampleRate*2,buf=c.createBuffer(1,len,c.sampleRate),d=buf.getChannelData(0);
+    for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+    const src=c.createBufferSource(); src.buffer=buf; src.loop=true;
+    const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=900; bp.Q.value=.6;
+    const g=c.createGain(); g.gain.value=0; src.connect(bp); bp.connect(g); g.connect(this.out); src.start(); this.flow={src,bp,g};
+  },
+  flowStop(){ if(this.flow){ try{ this.flow.src.stop(); }catch(e){} this.flow=null; } },
+  flowSet(q){
+    if(!this.flow||!this.ctx) return; const t=this.ctx.currentTime,a=Math.abs(q);
+    this.flow.g.gain.setTargetAtTime(Math.min(.35,a*.55),t,.05);
+    this.flow.bp.frequency.setTargetAtTime(600+Math.min(1,a)*1400,t,.05);
+  }
+};
+function initAudio(){ Snd.init(); }
+function updMute(){ const b=$('#btnMute'); if(b) b.innerHTML=(Snd.muted||ui.vol<=0)?'<i class="fi fi-rr-volume-mute"></i>':'<i class="fi fi-rr-volume"></i>'; }
+function setVol(v){
+  ui.vol=Math.max(0,Math.min(10,v)); Snd.apply();
+  const h=$('#hVol'); if(h&&+h.value!==ui.vol) h.value=ui.vol;
+  const sv=$('#sysVol'); if(sv) sv.textContent=ui.vol;
+  const sl=$('[data-sys="vol"]'); if(sl&&+sl.value!==ui.vol) sl.value=ui.vol;
+  updMute();
+}
+function playAlarm(pri){
+  const p=Snd.profile(), f=p.f;
+  const pulse=(t,fr,d)=>Snd.tone(fr,d,{t,type:p.type,g:p.g,h:p.h,a:.006,r:.03});
+  if(pri===2){ [[0,1],[.17,1],[.34,1],[.7,1.26],[.87,1.26]].forEach(x=>pulse(x[0],f*x[1],.11)); }
+  else if(pri===1){ [0,.22,.44].forEach(t=>pulse(t,f*.84,.14)); }
+  else { [0,.3].forEach(t=>pulse(t,f*.7,.18)); }
+}
+const alarmSnd={nextAt:0,pri:-1};
+setInterval(()=>{
+  if(dev.state==='off'||dev.state==='boot'){ alarmSnd.pri=-1; return; }
+  const act=eng.activeAlarms();
+  if(!act.length||ui.silUntil>Date.now()){ alarmSnd.pri=-1; return; }
+  const pri=Math.max(...act.map(id=>ALARMS[id][1])), now=Date.now();
+  if(pri>alarmSnd.pri||now>=alarmSnd.nextAt){ playAlarm(pri); alarmSnd.nextAt=now+[12000,6000,2800][pri]; }
+  alarmSnd.pri=pri;
+},150);
+
+/* ---------- curvas ---------- */
+function autoScale(arr,list,sym){
+  let m=0; for(let i=0;i<arr.length;i++){ const v=arr[i]; if(v===v){ const a=sym?Math.abs(v):v; if(a>m) m=a; } }
+  return list.find(s=>s>=m*1.05)||list[list.length-1];
+}
+function drawWave(cv,arr,o,tr){
+  if(!cv) return; const K=view.k, W=494, H=159;
+  if(cv._k!==K){ cv.width=Math.round(W*K); cv.height=Math.round(H*K); cv._k=K; }
+  const c=cv.getContext('2d'); c.setTransform(K,0,0,K,0,0);
+  c.fillStyle='#0a0914'; c.fillRect(0,0,W,H);
+  const L=46,Rm=14,T=18,B=22,pw=W-L-Rm,ph=H-T-B;
+  const S=o.sym?autoScale(arr,o.list,true):autoScale(arr,o.list,false);
+  const y=v=>o.sym?T+ph/2-(v/S)*(ph/2):T+ph-(Math.max(v,0)/S)*ph;
+  c.strokeStyle='#2a2838'; c.lineWidth=1; c.fillStyle='#d8dde6'; c.font='11px "Noto Sans",sans-serif'; c.textAlign='right'; c.textBaseline='middle';
+  const ticks=o.sym?[S,S*2/3,S/3,0,-S/3,-S*2/3,-S]:Array.from({length:o.nt+1},(_,i)=>S*i/o.nt);
+  ticks.forEach(t=>{ const yy=y(t); c.beginPath(); c.moveTo(L,yy); c.lineTo(W-Rm,yy); c.stroke(); c.fillText(String(Math.round(t)),L-5,yy); });
+  c.textAlign='center'; c.textBaseline='top';
+  for(let s=2;s<=12;s+=2){ const x=L+pw*s/12; c.beginPath(); c.moveTo(x,T); c.lineTo(x,T+ph); c.stroke(); c.fillText(String(s),x,T+ph+4); }
+  c.textAlign='left'; c.fillStyle=o.col; c.font='bold 13px "Noto Sans",sans-serif'; c.textBaseline='alphabetic'; c.fillText(o.name,L+4,13);
+  const nw=c.measureText(o.name).width; c.fillStyle='#d8dde6'; c.font='11px "Noto Sans",sans-serif'; c.fillText(o.unit,L+10+nw,13);
+  c.textAlign='right'; c.fillText('s',L-6,T+ph+14);
+  c.strokeStyle=o.col; c.lineWidth=2; c.lineJoin='round'; c.beginPath(); let pen=false;
+  for(let i=0;i<NS;i++){
+    const v=arr[i]; if(v!==v){ pen=false; continue; }
+    const x=L+pw*i/NS, yy=y(v);
+    if(!pen){ c.moveTo(x,yy); pen=true; } else c.lineTo(x,yy);
+  }
+  c.stroke();
+  if(tr){ c.fillStyle='#ff4fd0'; const yb=y(0)+9;
+    for(let i=0;i<NS;i++) if(tr[i]){ const x=L+pw*i/NS; c.beginPath(); c.moveTo(x,yb-6); c.lineTo(x-5,yb+3); c.lineTo(x+5,yb+3); c.fill(); } }
+}
+
+/* ---------- bucle principal ---------- */
+function fmtT(sec){ sec=Math.max(0,Math.floor(sec)); return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0'); }
+function monVal(k){
+  const m=eng.mon;
+  switch(k){
+    case 'ppeak': return fmt(m.ppeak,1); case 'pmean': return fmt(m.pmean,1);
+    case 'pplat': return m.pplat===null?'---':fmt(m.pplat,1);
+    case 'peepTot': return fmt(m.peepTot||eng.set.peep,1); case 'peepi': return fmt(m.peepi,1);
+    case 'fio2': return eng.o2t>0?'100':String(eng.set.fio2);
+    case 'cstat': return m.cstat===null?'---':fmt(m.cstat,0); case 'r': return m.r===null?'---':fmt(m.r,0);
+    case 'vte': return m.vte<1?'0.0':fmt(m.vte,0); case 'vti': return fmt(m.vti,0);
+    case 'vmin': return fmt(m.vmin,1); case 'f': return fmt(m.f,0); case 'fsp': return fmt(m.fsp,0);
+    case 'ti': return fmt(m.ti,1); case 'te': return fmt(m.te,1);
+    case 'ie': if(m.te<=0||m.ti<=0) return '---'; return m.ti<=m.te?'1:'+fmt(m.te/m.ti,1):fmt(m.ti/m.te,1)+':1';
+  }
+  return '--';
+}
+let lastSlow=0;
+function tick(){
+  if(shell&&shell.type==='panel'){ tickLTV(); return; }
+  const st=dev.state; if(st==='off'||st==='boot') return;
+  /* mensaje superior */
+  if(refs.msg){
+    const act=eng.activeAlarms(), now=performance.now();
+    if(act.length>1&&now-ui.alarmSwitch>2000){ ui.alarmIdx++; ui.alarmSwitch=now; }
+    let cls='',txt='';
+    if(act.length){ const id=act[ui.alarmIdx%act.length]; txt=ALARMS[id][0]+(act.length>1?`  (${act.length})`:''); cls=ALARMS[id][1]===2?'r':'y'; }
+    else if(ui.frozen){ txt='Curvas congeladas'; cls='i'; }
+    else if(ui.locked){ txt='Pantalla bloqueada'; cls='i'; }
+    const full='t-msg '+cls; if(refs.msg.className!==full) refs.msg.className=full;
+    if(refs.msg.textContent!==txt) refs.msg.textContent=txt;
+  }
+  if(refs.nP){
+    const m=eng.mon, al=eng.alarms;
+    refs.nP.textContent=fmt(m.ppeak,1); refs.nV.textContent=fmt(m.vmin,1); refs.nE.textContent=monVal('vte'); refs.nF.textContent=fmt(m.f,0);
+    refs.nE.className=(al.vtlow||al.vthigh)?'al':''; refs.nP.className=al.phigh?'al':''; refs.nV.className=(al.vminlow||al.vminhigh)?'al':''; refs.nF.className=(al.fhigh||al.flow)?'al':'';
+    const w=ui.frozen&&ui.snap?ui.snap:eng.w;
+    drawWave(refs.cP,w.p,{name:'Pva',unit:'cmH2O',col:'#f6d23c',list:[20,40,60,80,100],nt:2},w.tr);
+    drawWave(refs.cQ,w.q,{name:'Flujo',unit:'V\'/min',col:'#ff5fa8',list:[30,75,150,300],sym:true});
+    drawWave(refs.cV,w.v,{name:'V',unit:'ml',col:'#7bea5a',list:[400,800,1200,1600,2400,3200],nt:4});
+  }
+  const now=performance.now();
+  if(now-lastSlow>250){
+    lastSlow=now;
+    if(refs.sbT) refs.sbT.textContent=new Date(Date.now()-dev.sbStart).toISOString().substr(11,8);
+    if(refs.m) refs.m.forEach(el=>{ el.textContent=monVal(el.dataset.m); });
+    const rem=ui.silUntil-Date.now();
+    if(refs.bsil) refs.bsil.textContent=rem>0?'🔕 '+fmtT(rem/1000):'';
+    if(rem<=0&&ui.silUntil){ ui.silUntil=0; }
+    if(refs.bneb) refs.bneb.textContent=eng.nebT>0?'Neb '+fmtT(eng.nebT):'';
+    if(refs.bo2) refs.bo2.textContent=eng.o2t>0?'O₂ 100% '+fmtT(eng.o2t):'';
+    ['leak','flow','o2'].forEach(id=>{ const o=dev.preop[id]; const pb=$('#pb-'+id); if(pb&&o.st===1) pb.style.width=Math.min(100,(performance.now()-o.t0)/32)+'%'; });
+    keyLeds(); updateCases();
+    if(ui.win==='alarm'&&!ui.sel&&!ui.dialog&&now-(tick.ar||0)>1000){ tick.ar=now; render(); }
+  }
+}
+let last=performance.now(), acc=0;
+function loop(now){
+  const d=Math.min(0.25,(now-last)/1000); last=now;
+  if(dev.state==='standby'||dev.state==='run'){ acc+=d; while(acc>=DT){ eng.step(); acc-=DT; } } else acc=0;
+  tick(); lungTick(); requestAnimationFrame(loop);
+}
+
+/* ---------- ajuste de escala / pantalla completa ---------- */
+function fit(){
+  const w=$('#deviceWrap'), d=$('#device'), fs=document.fullscreenElement===w;
+  const W=w.clientWidth, H=w.clientHeight; const s=fs?Math.min(W/1040,H/740):W/1040;
+  const ox=fs?(W-1040*s)/2:0, oy=fs?(H-740*s)/2:0;
+  d.style.transform=`translate(${ox}px,${oy}px) scale(${s})`;
+  view.k=Math.min(3,Math.max(1,s*(window.devicePixelRatio||1)));
+}
+new ResizeObserver(fit).observe($('#deviceWrap')); document.addEventListener('fullscreenchange',fit);
+$('#btnFull').addEventListener('click',()=>{ const w=$('#deviceWrap'); if(document.fullscreenElement) document.exitFullscreen(); else if(w.requestFullscreen) w.requestFullscreen(); });
+
+/* ---------- panel de instructor ---------- */
+const SCEN={
+  pas:{n:'Paciente sano, sedado (pasivo)',C:60,R:8,rate:0,effort:0},
+  esp:{n:'Paciente espontáneo estable',C:45,R:10,rate:14,effort:4},
+  sdra:{n:'SDRA sedado (pulmón rígido)',C:25,R:10,rate:0,effort:0},
+  epoc:{n:'EPOC sedado (obstrucción)',C:70,R:25,rate:0,effort:0},
+  epocE:{n:'EPOC espontáneo (taquipnea)',C:70,R:25,rate:22,effort:8},
+  asma:{n:'Broncoespasmo severo (sedado)',C:40,R:45,rate:0,effort:0},
+  apnea:{n:'Apnea (sin esfuerzo inspiratorio)',C:60,R:8,rate:0,effort:0}
+};
+$('#scen').innerHTML=Object.keys(SCEN).map(k=>`<option value="${k}">${SCEN[k].n}</option>`).join('');
+function syncSliders(){
+  const p=eng.pt;
+  $('#sC').value=p.C; $('#sR').value=p.R; $('#sRate').value=p.rate; $('#sEff').value=p.effort;
+  $('#vC').textContent=p.C; $('#vR').textContent=p.R; $('#vRate').textContent=p.rate; $('#vEff').textContent=p.effort;
+  $('#swDisc').checked=p.disc; $('#swBatt').checked=eng.techBatt;
+}
+function loadScen(id){
+  const s=SCEN[id]; ['C','R','rate','effort'].forEach(k=>eng.setPatient(k,s[k])); $('#scen').value=id; syncSliders();
+  eng.log('Escenario del paciente: '+s.n);
+}
+$('#scen').addEventListener('change',e=>loadScen(e.target.value));
+[['sC','C','vC'],['sR','R','vR'],['sRate','rate','vRate'],['sEff','effort','vEff']].forEach(([s,k,v])=>{
+  $('#'+s).addEventListener('input',e=>{ eng.setPatient(k,+e.target.value); $('#'+v).textContent=e.target.value; });
+});
+function setDisc(v){ v=!!v; if(eng.pt.disc===v) return; eng.pt.disc=v; $('#swDisc').checked=v; eng.log(v?'Circuito desconectado del paciente':'Circuito reconectado','alarm'); dev.flags.reconn=!v&&eng.flags.discSeen; }
+$('#swDisc').addEventListener('change',e=>setDisc(e.target.checked));
+$('#swBatt').addEventListener('change',e=>{ eng.techBatt=e.target.checked; render(); });
+$('#btnReset').addEventListener('click',()=>{
+  eng.reset(); eng.set.vt=Math.round(66*8/10)*10;
+  Object.assign(dev,{state:'off',sex:'M',height:170,ibw:66,lastPatient:null,preopOk:false,flags:{},preop:{leak:{st:0,t0:0},flow:{st:0,t0:0},o2:{st:0,t0:0}}});
+  Object.assign(ui,{win:null,sel:null,pend:null,locked:false,night:false,frozen:false,snap:null,silUntil:0,dialog:null,sbtab:'new'});
+  syncSliders(); setShell(shellId,true);
+});
+
+const CASES=[
+  {t:'Caso 1 · SDRA sedado: ventilación protectora',s:'sdra',
+   b:'Hombre sedado, pulmón rígido (compliance baja). Encienda, ingrese la altura y programe ventilación protectora por volumen ((S)CMV, VCV o VC/VAC según la carcasa).',
+   g:[['Modo por volumen asistido/controlado ((S)CMV, VCV, VC-AC)',()=>['SCMV','VCCMV'].includes(eng.set.mode)],
+      ['Vt ≈ 6 ml/kg de PCI (±40 ml)',()=>Math.abs(eng.set.vt-6*dev.ibw)<=40],
+      ['Frecuencia entre 18 y 24 c/min',()=>eng.set.freq>=18&&eng.set.freq<=24],
+      ['PEEP ≥ 10 cmH2O',()=>eng.set.peep>=10],
+      ['FiO₂ ≥ 60 %',()=>eng.set.fio2>=60],
+      ['Ventilando con Ppico ≤ 35 cmH2O',()=>eng.running&&eng.nBreaths>3&&eng.mon.ppeak>0&&eng.mon.ppeak<=35]]},
+  {t:'Caso 2 · Paciente espontáneo estable',s:'esp',
+   b:'Paciente despierto, respira por sí mismo. Programe soporte ventilatorio en ESPONT sin alarmas activas.',
+   g:[['Modo ESPONT',()=>eng.set.mode==='SPONT'],
+      ['ΔPsoporte entre 6 y 12 cmH2O',()=>eng.set.psupport>=6&&eng.set.psupport<=12],
+      ['PEEP entre 5 y 8 cmH2O',()=>eng.set.peep>=5&&eng.set.peep<=8],
+      ['FiO₂ ≤ 40 %',()=>eng.set.fio2<=40],
+      ['Ventilando sin alarmas activas',()=>eng.running&&eng.nBreaths>4&&eng.activeAlarms().length===0]]},
+  {t:'Caso 3 · EPOC sedado: evitar PEEP intrínseca',s:'epoc',
+   b:'Obstrucción espiratoria (resistencia alta). Alargue el tiempo espiratorio con un modo mandatorio.',
+   g:[['Modo mandatorio (volumen, presión o SIMV)',()=>['SCMV','VCCMV','PCV','SIMV','PSIMV'].includes(eng.set.mode)],
+      ['Frecuencia ≤ 14 c/min',()=>eng.set.freq<=14],
+      ['Ti ≤ 1,0 s (espiración larga)',()=>eng.set.ti<=1.0],
+      ['PEEP intrínseca < 2 cmH2O (en Monitorización)',()=>eng.running&&eng.nBreaths>4&&eng.mon.peepi<2],
+      ['FiO₂ ≤ 40 %',()=>eng.set.fio2<=40]]},
+  {t:'Caso 4 · Apnea en modo espontáneo',s:'apnea',
+   b:'Deje el equipo en ESPONT y espere la alarma de Apnea (ventilación de respaldo). Silencie y cambie a un modo con frecuencia mandatoria.',
+   g:[['Se presentó la alarma de Apnea',()=>!!eng.flags.apneaSeen],
+      ['Silenció la alarma (2 MIN)',()=>ui.silUntil>Date.now()||!!dev.flags.silDisc||!!dev.flags.silApnea],
+      ['Cambió a un modo mandatorio con frecuencia fija',()=>['SCMV','VCCMV','PCV','APVCMV'].includes(eng.set.mode)],
+      ['Frecuencia entre 12 y 16 c/min',()=>eng.set.freq>=12&&eng.set.freq<=16],
+      ['Ventilando sin alarmas activas',()=>eng.running&&eng.nBreaths>4&&eng.activeAlarms().length===0]]},
+  {t:'Caso 5 · Desconexión del circuito',s:'pas',
+   b:'Programe un modo mandatorio y ventile. Desconecte el circuito (interruptor del instructor o clic en la pieza en Y del pulmón), reconozca la alarma, silénciela y reconecte.',
+   g:[['Ventilando en modo con respaldo mandatorio',()=>eng.running&&['SCMV','VCCMV','PCV','APVCMV','SIMV','APVSIMV','PSIMV'].includes(eng.set.mode)],
+      ['Se presentó la alarma de desconexión',()=>!!eng.flags.discSeen],
+      ['Silenció la alarma durante la desconexión',()=>!!dev.flags.silDisc],
+      ['Reconectó y no quedan alarmas activas',()=>!!eng.flags.discSeen&&!eng.pt.disc&&eng.activeAlarms().length===0&&eng.running]]}
+];
+function renderCases(){
+  $('#cases').innerHTML=CASES.map((c,i)=>`<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button ${i?'collapsed':''}" type="button" data-bs-toggle="collapse" data-bs-target="#cs${i}">${c.t}</button></h2>
+    <div id="cs${i}" class="accordion-collapse collapse ${i?'':'show'}" data-bs-parent="#cases"><div class="accordion-body">
+    <p class="small mb-2">${c.b}</p>
+    <ul class="goals list-unstyled small mb-2">${c.g.map((g,j)=>`<li data-c="${i}" data-g="${j}"><span class="dot">○</span> ${g[0]}</li>`).join('')}</ul>
+    <button class="btn btn-sm btn-primary" data-load="${c.s}"><i class="fi fi-rr-user me-1"></i>Cargar paciente</button></div></div></div>`).join('');
+  $$('#cases [data-load]').forEach(b=>b.addEventListener('click',()=>loadScen(b.dataset.load)));
+}
+function updateCases(){
+  $$('#cases li').forEach(li=>{
+    const g=CASES[li.dataset.c].g[li.dataset.g]; let ok=false; try{ ok=!!g[1](); }catch(e){}
+    li.classList.toggle('ok',ok); li.firstChild.textContent=ok?'✔':'○';
+  });
+}
+
+
+/* ================= CARCASAS (selector de modelo) ================= */
+const ALLM=['VCCMV','SCMV','APVCMV','PCV','SIMV','APVSIMV','PSIMV','SPONT','NIV','NIVST'];
+const SHELLS={
+  T1:{id:'T1',name:'Hamilton-T1',maker:'Hamilton Medical',type:'touch',cls:'sk-t1',brand:'HAMILTON·T1',plate:'HAMILTON<br>MEDICAL',
+    defMode:'SPONT',modes:['SCMV','APVCMV','PCV','SIMV','APVSIMV','SPONT','NIV','NIVST'],
+    note:'Pantalla táctil con curvas. Toque un parámetro, gire el mando y púlselo para confirmar.'},
+  LTV:{id:'LTV',name:'LTV 1200',maker:'CareFusion / Vyaire',type:'panel',cls:'sk-ltv',brand:'',plate:'',
+    defMode:'SCMV',def:{pLow:5,trigger:3},
+    names:{SCMV:'VC/VAC · Volumen',PCV:'VC/VAC · Presión',SIMV:'SIMV · Volumen',PSIMV:'SIMV · Presión',SPONT:'CPAP/PSV',NIV:'VNI (NPPV)'},
+    po:{trigger:{min:0,max:10},pcontrol:{min:5,max:99},pHigh:{min:20,max:100},vminLow:{min:0.5,max:30},peep:{max:20}},
+    note:'Panel de LEDs: pulse el botón de un control (parpadea), gire el mando o use −/✓/+ y confirme. Sensibilidad en «oF» = ciclos solo controlados. Pulsación larga en O2%: Flush de O₂ (2 min).'},
+  OXY:{id:'OXY',name:'Oxylog 3000 plus',maker:'Dräger',type:'touch',cls:'sk-oxy',brand:'Oxylog 3000 plus',plate:'Dräger',
+    defMode:'VCCMV',def:{fio2:100},modes:['VCCMV','SCMV','SIMV','PCV','PSIMV','SPONT','NIV'],
+    names:{VCCMV:'VC-CMV',SCMV:'VC-AC',SIMV:'VC-SIMV',PCV:'PC-AC',PSIMV:'PC-BIPAP',SPONT:'SPN-CPAP/PS',NIV:'NIV'},
+    labels:{vt:'VT',freq:'f',ti:'Tinsp',pcontrol:'Pinsp',psupport:'ΔPASB',peep:'PEEP',fio2:'FiO₂',trigger:'Flow trigger',tslope:'Rampa',ets:'ETS',tinspmax:'Tinsp máx',pausa:'Pausa'},
+    po:{fio2:{min:40}},
+    note:'Aproximación de la carcasa prehospitalaria: nombres de modos y parámetros estilo Dräger. Verifique rangos con el manual.'},
+  SV300:{id:'SV300',name:'SV300',maker:'Mindray',type:'touch',cls:'sk-sv',brand:'SV300',plate:'mindray',
+    defMode:'SCMV',modes:['SCMV','PCV','APVCMV','SIMV','PSIMV','SPONT','NIV'],
+    names:{SCMV:'VCV',PCV:'PCV',APVCMV:'PRVC',SIMV:'SIMV(V)+PS',PSIMV:'SIMV(P)+PS',SPONT:'PSV/CPAP',NIV:'NIV'},
+    labels:{vt:'Vt',freq:'Frec.',ti:'Tinsp',pcontrol:'Pinsp',psupport:'PS',peep:'PEEP',fio2:'O₂',trigger:'Trig. flujo',tslope:'Pendiente',ets:'Esp. %',tinspmax:'Tinsp máx',pausa:'Pausa'},
+    note:'Aproximación de ventilador de UCI: nombres de modos y parámetros estilo Mindray. Verifique con el manual.'},
+  PB980:{id:'PB980',name:'PB980',maker:'Puritan Bennett',type:'touch',cls:'sk-pb',brand:'PB980',plate:'Puritan Bennett',
+    defMode:'SCMV',modes:['SCMV','PCV','APVCMV','SIMV','APVSIMV','PSIMV','SPONT','NIV'],
+    names:{SCMV:'A/C VC',PCV:'A/C PC',APVCMV:'A/C VC+',SIMV:'SIMV VC',APVSIMV:'SIMV VC+',PSIMV:'SIMV PC',SPONT:'SPONT',NIV:'NIV'},
+    labels:{vt:'VT',freq:'f',ti:'TI',pcontrol:'PI',psupport:'PSUPP',peep:'PEEP',fio2:'O₂%',trigger:'V-SENS',tslope:'RISE',ets:'E-SENS',tinspmax:'TI máx',pausa:'TPL'},
+    note:'Aproximación de ventilador de UCI: nomenclatura estilo Puritan Bennett. Verifique con el manual.'},
+  SERVO:{id:'SERVO',name:'Servo-i',maker:'Maquet / Getinge',type:'touch',cls:'sk-servo',brand:'SERVO-i',plate:'MAQUET',
+    defMode:'SCMV',modes:['SCMV','APVCMV','PCV','SIMV','APVSIMV','PSIMV','SPONT','NIV'],
+    names:{SCMV:'VC',APVCMV:'PRVC',PCV:'PC',SIMV:'SIMV(VC)+PS',APVSIMV:'SIMV(PRVC)+PS',PSIMV:'SIMV(PC)+PS',SPONT:'PS/CPAP',NIV:'NIV PS'},
+    labels:{vt:'Vol. tidal',freq:'Frec. resp.',ti:'T insp',pcontrol:'Pinsp',psupport:'PS',peep:'PEEP',fio2:'Conc. O₂',trigger:'Trigger',tslope:'T. subida',ets:'Ciclado',tinspmax:'T insp máx',pausa:'Pausa'},
+    note:'Aproximación de ventilador de UCI: nomenclatura estilo Servo. Verifique con el manual.'}
+};
+const P=k=>(shell&&shell.po&&shell.po[k])?Object.assign({},PARAMS[k],shell.po[k]):PARAMS[k];
+const lbl=k=>(shell&&shell.labels&&shell.labels[k])||PARAMS[k].label;
+const mname=id=>(shell&&shell.names&&shell.names[id])||MODES[id].name;
+
+function buildShellBar(){
+  const bar=$('#shellBar');
+  bar.innerHTML=Object.values(SHELLS).map(x=>`<button type="button" class="btn btn-outline-primary btn-sm" data-shell="${x.id}">${x.name}<small>${x.maker}</small></button>`).join('');
+  bar.addEventListener('click',e=>{ const b=e.target.closest('[data-shell]'); if(b&&b.dataset.shell!==shellId) setShell(b.dataset.shell); });
+}
+function setShell(id,force){
+  const sh=SHELLS[id]||SHELLS.T1;
+  if(!force&&shell&&sh.id===shellId) return;
+  if(eng.running) eng.stop();
+  shell=sh; shellId=sh.id; if(!sh.modes) sh.modes=ALLM;
+  try{ localStorage.setItem('vent-shell',shellId); }catch(e){}
+  $('#device').className=sh.cls+(sh.type==='panel'?' panelmode':'');
+  $('#brand').innerHTML=sh.brand; $('#plate').innerHTML=sh.plate; $('#shellNote').textContent=sh.note||'';
+  const ln=$('#lvName'); if(ln) ln.textContent=sh.name; const lsx=$('#lvStripe'); if(lsx) lsx.setAttribute('fill',SHCOL[sh.id]||'#e8861a');
+  eng.set=defaults(dev.ibw); eng.set.mode=sh.defMode; Object.assign(eng.set,sh.def||{});
+  eng.apvP=10; eng.labelFn=lbl; eng.mnameFn=mname;
+  Object.assign(ui,{win:null,sel:null,pend:null,modeSel:null,locked:false,night:false,frozen:false,snap:null,dialog:null,silUntil:0,sbtab:'new'});
+  dev.state=sh.type==='panel'?'standby':'off';
+  if(sh.type==='panel'){ if(!ltv.built) buildLTV(); ltvFromMode(); }
+  eng.log('Carcasa: '+sh.name+' · ajustes del equipo reiniciados');
+  $$('#shellBar [data-shell]').forEach(b=>{ const on=b.dataset.shell===shellId; b.classList.toggle('btn-primary',on); b.classList.toggle('btn-outline-primary',!on); });
+  howto(); render();
+}
+
+/* ================= LTV 1200 (panel de LEDs) ================= */
+const ltv={type:'vol',sel:'CMV',nppv:false,mon:0,msg:'',msgUntil:0,stopArm:0,slow:0,o2low:false,cache:{},built:false,longDone:false,aIdx:0,aSw:0};
+const SEGP={a:'M4 3H18',b:'M19 4V15',c:'M19 19V30',d:'M4 31H18',e:'M3 19V30',f:'M3 4V15',g:'M4 17H18'};
+const GLY={'0':'abcdef','1':'bc','2':'abged','3':'abgcd','4':'fgbc','5':'afgcd','6':'afgedc','7':'abc','8':'abcdefg','9':'abcdfg','-':'g','F':'afge','o':'gecd',' ':''};
+function seg7(txt,n){
+  const cells=[];
+  for(const ch of String(txt)){ if(ch==='.'&&cells.length) cells[cells.length-1].dp=true; else cells.push({c:ch,dp:false}); }
+  while(cells.length<n) cells.unshift({c:' ',dp:false});
+  return cells.slice(-n).map(x=>{
+    const on=GLY[x.c]||'';
+    return '<svg width="26" height="36" viewBox="0 0 24 34">'+'abcdefg'.split('').map(sg=>`<path d="${SEGP[sg]}" stroke="${on.includes(sg)?'#ff3d2e':'#2a2a2d'}" stroke-width="3.4" fill="none"/>`).join('')+`<circle cx="21.5" cy="31" r="1.9" fill="${x.dp?'#ff3d2e':'#2a2a2d'}"/></svg>`;
+  }).join('');
+}
+const LTVCTRL=[['freq','Frecuencia','cpm',2],['vt','Volumen Corriente','ml',4],['pcontrol','Pres Control','cmH2O+PEEP',2],['ti','Tiempo Insp','seg',2],['psupport','Pres AI','cmH2O+PEEP',2],['fio2','O2%','(Flush O2)',3],['trigger','Sensibilidad','l/min',2]];
+const LTVCX=[55,155,255,329,403,490,577];
+const LTVALM=[['pHigh','Presión Alta','cmH2O',3,675],['pLow','Presión Baja','cmH2O',2,767],['vminLow','V. Bajo','l/min',2,838]];
+const LTVMON=[()=>'PIP '+monVal('ppeak'),()=>'PMEDIA '+monVal('pmean'),()=>'PEEP '+monVal('peepTot'),()=>'VTE '+monVal('vte')+' ml',()=>'VM '+monVal('vmin')+' l/min',()=>'F TOTAL '+monVal('f'),()=>'I:E '+monVal('ie'),()=>'PPLAT '+monVal('pplat')];
+
+function ltvActive(k){
+  if(['peep','fio2','pHigh','pLow','vminLow'].includes(k)) return true;
+  return MODES[eng.set.mode].params.includes(k);
+}
+function ltvFmt(k){
+  const v=eng.set[k], x=(ui.sel===k&&ui.pend!==null)?ui.pend:v;
+  switch(k){
+    case 'ti': return x.toFixed(1);
+    case 'trigger': return x<=0?'oF':x.toFixed(1);
+    case 'vminLow': return x>=10?String(Math.round(x)):x.toFixed(1);
+    case 'fio2': return String((eng.o2t>0&&ui.sel!=='fio2')?100:Math.round(x));
+    default: return String(Math.round(x));
+  }
+}
+function ltvMsg(t,ms,quiet){ ltv.msg=t; ltv.msgUntil=Date.now()+(ms||2200); if(!quiet&&/^(PANEL BLOQUEADO|NO DISPONIBLE|VNIP SOLO|PULSE DE NUEVO)/.test(t)) Snd.err(); }
+function ltvFromMode(){
+  const m=eng.set.mode;
+  const map={SCMV:['vol','CMV',false],VCCMV:['vol','CMV',false],APVCMV:['vol','CMV',false],PCV:['pres','CMV',false],SIMV:['vol','SIMV',false],APVSIMV:['vol','SIMV',false],PSIMV:['pres','SIMV',false],SPONT:[ltv.type,'CPAP',false],NIV:[ltv.type,'CPAP',true],NIVST:[ltv.type,'CPAP',true]};
+  const x=map[m]||map.SCMV; ltv.type=x[0]; ltv.sel=x[1]; ltv.nppv=x[2];
+}
+function ltvApplyMode(){
+  let id;
+  if(ltv.sel==='CPAP') id=ltv.nppv?'NIV':'SPONT';
+  else if(ltv.sel==='CMV') id=ltv.type==='vol'?'SCMV':'PCV';
+  else id=ltv.type==='vol'?'SIMV':'PSIMV';
+  eng.setMode(id);
+}
+function ltvPress(k){
+  if(ui.locked){ ltvMsg('PANEL BLOQUEADO'); return; }
+  if(!ltvActive(k)){ ltvMsg('NO DISPONIBLE EN ESTE MODO'); return; }
+  if(ui.sel===k){ confirmEdit(); return; }
+  selectParam(k);
+}
+function ltvBtn(b){
+  if(b!=='lock'&&b!=='sil'&&ui.locked){ ltvMsg('PANEL BLOQUEADO'); return; }
+  switch(b){
+    case 'run':
+      if(!eng.running){ cancelEdit(); Snd.start(); eng.start(); dev.state='run'; }
+      else if(Date.now()<ltv.stopArm){ Snd.stdby(); eng.stop(); dev.state='standby'; ltv.stopArm=0; }
+      else{ ltv.stopArm=Date.now()+3000; ltvMsg('PULSE DE NUEVO PARA DETENER',3000); }
+      break;
+    case 'type': cancelEdit(); ltv.type=ltv.type==='vol'?'pres':'vol'; ltvApplyMode(); break;
+    case 'sel': cancelEdit(); ltv.sel={CMV:'SIMV',SIMV:'CPAP',CPAP:'CMV'}[ltv.sel]; if(ltv.sel!=='CPAP') ltv.nppv=false; ltvApplyMode(); break;
+    case 'niv': if(ltv.sel==='CPAP'){ cancelEdit(); ltv.nppv=!ltv.nppv; ltvApplyMode(); } else ltvMsg('VNIP SOLO EN CPAP/PSV'); break;
+    case 'pause': A.hold(); break;
+    case 'manual': doManual(); break;
+    case 'o2low': ltv.o2low=!ltv.o2low; break;
+    case 'lock': ui.locked=!ui.locked; if(ui.locked) cancelEdit(); ltvMsg(ui.locked?'PANEL BLOQUEADO':'PANEL DESBLOQUEADO'); break;
+    case 'sil': toggleSil(); break;
+    case 'mon': ltv.mon=(ltv.mon+1)%LTVMON.length; break;
+  }
+  render();
+}
+function bindKnob(k,kin){
+  let a0=null,acc=0,moved=0,t0=0,rot=0;
+  const ang=e=>{ const r=k.getBoundingClientRect(); return Math.atan2(e.clientY-(r.top+r.height/2),e.clientX-(r.left+r.width/2))*180/Math.PI; };
+  k.addEventListener('pointerdown',e=>{ initAudio(); k.setPointerCapture(e.pointerId); a0=ang(e); acc=0; moved=0; t0=performance.now(); });
+  k.addEventListener('pointermove',e=>{
+    if(a0===null) return; const a=ang(e); let d=a-a0; if(d>180) d-=360; if(d<-180) d+=360; a0=a;
+    moved+=Math.abs(d); acc+=d; rot+=d; kin.style.transform=`rotate(${rot}deg)`;
+    while(acc>=16){ acc-=16; rotate(1); } while(acc<=-16){ acc+=16; rotate(-1); }
+  });
+  k.addEventListener('pointerup',()=>{ if(a0!==null&&moved<8&&performance.now()-t0<600) press(); a0=null; });
+  k.addEventListener('pointercancel',()=>{ a0=null; });
+  k.addEventListener('wheel',e=>{ e.preventDefault(); rotate(e.deltaY<0?1:-1); rot+=e.deltaY<0?16:-16; kin.style.transform=`rotate(${rot}deg)`; },{passive:false});
+}
+function buildLTV(){
+  const lab=(x,y,t,u,c)=>`<div class="ltv-lab ${c||''}" style="left:${x}px;top:${y}px">${t}${u?`<small>${u}</small>`:''}</div>`;
+  const disp=(k,x,y,n)=>`<div class="ltv-d" id="d-${k}" style="left:${x}px;top:${y}px;width:${n*26+14}px"></div>`;
+  const led=(id,x,y,c)=>`<i class="led" id="l-${id}" style="left:${x}px;top:${y}px;--lc:${c}"></i>`;
+  const btn=(a,x,y,cls,txt)=>`<button type="button" class="lb ${cls||''}" ${a} style="left:${x}px;top:${y}px">${txt||''}</button>`;
+  let h='<div class="ltv-fabric"></div><div class="ltv-housing"></div><div class="ltv-band"><div class="ltv-buckle"></div></div><div id="ltvFace">';
+  h+='<div class="ltv-t" style="left:14px;top:12px">Presión Paciente (cmH2O)</div>';
+  h+='<div class="ltv-bar" style="left:28px;top:44px;width:606px"><div id="ltvFill"></div><div class="ltv-seg"></div></div>';
+  for(let v=-10;v<=100;v+=10) h+=`<div class="ltv-tk" style="left:${28+(v+10)/110*606}px;top:68px">${v}</div>`;
+  h+='<div class="ltv-mon" id="ltvMon" style="left:28px;top:100px;width:606px;height:41px"></div>';
+  h+='<button type="button" class="lb sel" data-lb="mon" style="left:66px;top:104px;width:60px;height:34px">Selec.</button>';
+  h+='<div class="ltv-leg" style="left:658px;top:44px"><div><i class="led s" id="l-eff" style="--lc:#2fe04a"></i>Esfuerzo Paciente</div><div><i class="led s" id="l-ext" style="--lc:#ffe033"></i>Alimentación Externa</div><div><i class="led s" id="l-chg" style="--lc:#ff9a2e"></i>Estado Carga Bat</div><div><i class="led s" id="l-bat" style="--lc:#ff4a3a"></i>Nivel Bat Int</div></div>';
+  h+='<div class="ltv-logo" style="left:810px;top:34px">LTV<sup>®</sup><span>1200</span></div><div class="ltv-cf" style="left:814px;top:104px">CareFusion</div>';
+  h+='<div class="ltv-box" style="left:13px;top:161px;width:601px;height:176px"></div><div class="ltv-box red" style="left:618px;top:161px;width:332px;height:176px"></div>';
+  h+='<div class="ltv-hd" style="left:13px;top:161px;width:601px">Controles</div><div class="ltv-hd red" style="left:618px;top:161px;width:332px">Alarmas</div>';
+  LTVCTRL.forEach((c,i)=>{ const x=LTVCX[i]; h+=lab(x,196,c[1],c[2])+disp(c[0],x,238,c[3])+btn(`data-lk="${c[0]}"`,x,290); });
+  LTVALM.forEach(a=>{ h+=lab(a[4],196,a[1],a[2])+disp(a[0],a[4],238,a[3])+btn(`data-lk="${a[0]}"`,a[4],290); });
+  h+=lab(912,196,'Paro Vent')+led('stop',912,226,'#ff3b30')+lab(912,244,'Inhib/ alarma')+led('sil',912,278,'#ffb02e')+btn('data-lb="sil"',912,290);
+  h+=lab(46,392,'Marcha/Paro')+led('run',46,416,'#35e04f')+btn('data-lb="run"',46,428);
+  h+=lab(112,392,'Volumen')+led('vol',112,414,'#35e04f')+lab(168,392,'Presión')+led('pres',168,414,'#35e04f')+btn('data-lb="type"',140,428);
+  h+=lab(214,392,'VC/VAC',null,'n')+led('cmv',214,414,'#35e04f')+lab(264,392,'SIMV',null,'n')+led('simv',264,414,'#35e04f')+lab(316,392,'CPAP/ PSV',null,'n')+led('cpap',316,414,'#35e04f')+btn('data-lb="sel"',264,428);
+h+='<div class="ltv-vnip" data-lb="niv" style="left:178px;top:446px"><i class="led s" id="l-niv" style="--lc:#35e04f;width:16px"></i>VNIP</div>';
+  h+=lab(382,392,'Insp/Esp','Pausa')+btn('data-lb="pause"',382,428);
+  h+=lab(448,392,'Ciclo','Manual')+btn('data-lb="manual"',448,428);
+  h+=lab(514,392,'Alim O2','baja presión')+led('o2low',514,418,'#ff9a2e')+btn('data-lb="o2low"',514,428);
+  h+=lab(580,392,'Bloqueo')+led('lock',580,416,'#ffb02e')+btn('data-lb="lock"',580,428);
+  h+='<div class="ltv-lab" style="left:699px;top:338px">Ajuste</div><div id="ltvKnob" style="left:638px;top:354px"><div id="ltvKnobIn"><div class="dimple"></div></div></div>';
+  h+='<div class="ltv-box" style="left:770px;top:345px;width:180px;height:132px"></div><div class="ltv-hd" style="left:770px;top:345px;width:180px;height:16px;line-height:16px"></div>';
+  h+=disp('peep',850,372,2)+lab(915,382,'PEEP','cmH2O')+btn('data-lk="peep"',850,428);
+  h+='</div><div class="ltv-hint">LTV 1200 · pulse un control, gire el mando y confirme. «Marcha/Paro» inicia la ventilación.</div>';
+  h+='<div class="ltv-kb"><button id="lkM" aria-label="Disminuir">−</button><button id="lkOk" class="ok" aria-label="Confirmar">✓</button><button id="lkP" aria-label="Aumentar">+</button></div>';
+  const root=$('#devLTV'); root.innerHTML=h;
+  root.addEventListener('pointerdown',()=>{ ltv.longDone=false; },true);
+  root.addEventListener('click',e=>{
+    initAudio();
+    const b=e.target.closest('[data-lk],[data-lb]'); if(!b) return;
+    if(ltv.longDone){ ltv.longDone=false; return; }
+    Snd.click();
+    if(b.dataset.lk) ltvPress(b.dataset.lk); else ltvBtn(b.dataset.lb);
+  });
+  const o2=root.querySelector('[data-lk="fio2"]'); let lt=null;
+  o2.addEventListener('pointerdown',()=>{ lt=setTimeout(()=>{ lt=null; ltv.longDone=true; if(ui.locked){ ltvMsg('PANEL BLOQUEADO'); return; } cancelEdit(); toggleO2(); },800); });
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=>o2.addEventListener(ev,()=>{ if(lt){ clearTimeout(lt); lt=null; } }));
+  bindKnob($('#ltvKnob'),$('#ltvKnobIn'));
+  $('#lkM').addEventListener('click',()=>rotate(-1)); $('#lkP').addEventListener('click',()=>rotate(1)); $('#lkOk').addEventListener('click',press);
+  ltv.built=true;
+}
+function setDisp(id,n,txt,blink){
+  const el=$('#d-'+id); if(!el) return;
+  const key=txt+'|'+n; if(ltv.cache[id]!==key){ el.innerHTML=seg7(txt,n); ltv.cache[id]=key; }
+  el.classList.toggle('blink',!!blink);
+}
+function renderLTV(){
+  if(!ltv.built) return;
+  LTVCTRL.forEach(c=>{ const k=c[0]; setDisp(k,c[3],ltvActive(k)?ltvFmt(k):'',ui.sel===k); });
+  LTVALM.forEach(a=>setDisp(a[0],a[3],ltvFmt(a[0]),ui.sel===a[0]));
+  setDisp('peep',2,ltvFmt('peep'),ui.sel==='peep');
+  const L=(id,on)=>{ const e=$('#l-'+id); if(e) e.classList.toggle('on',!!on); };
+  L('run',eng.running); L('stop',!eng.running); L('vol',ltv.type==='vol'); L('pres',ltv.type==='pres');
+  L('cmv',ltv.sel==='CMV'); L('simv',ltv.sel==='SIMV'); L('cpap',ltv.sel==='CPAP'); L('niv',ltv.nppv);
+  L('lock',ui.locked); L('o2low',ltv.o2low); L('sil',ui.silUntil>Date.now()); L('ext',true); L('chg',!eng.techBatt); L('bat',eng.techBatt);
+  updateLtvMon();
+}
+function updateLtvMon(){
+  const el=$('#ltvMon'); if(!el) return;
+  const now=Date.now(), act=eng.activeAlarms(); let txt,cls='';
+  if(ltv.msg&&now<ltv.msgUntil){ txt=ltv.msg; }
+  else if(act.length){
+    if(act.length>1&&now-ltv.aSw>2000){ ltv.aIdx++; ltv.aSw=now; }
+    const id=act[ltv.aIdx%act.length]; txt=ALARMS[id][0].toUpperCase(); cls=ALARMS[id][1]===2?'red':'yel';
+  }
+  else if(!eng.running) txt='VENT. DETENIDO';
+  else txt=LTVMON[ltv.mon%LTVMON.length]();
+  el.className='ltv-mon '+cls; if(el.textContent!==txt) el.textContent=txt;
+}
+function tickLTV(){
+  if(!ltv.built) return;
+  const fill=$('#ltvFill');
+  if(fill){ const pr=eng.running?eng.Paw:0; fill.style.width=Math.max(0,Math.min(100,(pr+10)/110*100))+'%'; }
+  const e=$('#l-eff'); if(e) e.classList.toggle('on',eng.running&&eng.t-eng.lastTrigT<0.25);
+  const now=performance.now();
+  if(now-ltv.slow>200){
+    ltv.slow=now;
+    if(ui.silUntil&&ui.silUntil<=Date.now()) ui.silUntil=0;
+    const sl=$('#l-sil'); if(sl) sl.classList.toggle('on',ui.silUntil>Date.now());
+    const stp=$('#l-stop'); if(stp) stp.classList.toggle('on',!eng.running);
+    LTVCTRL.forEach(c=>{ if(c[0]==='fio2') setDisp('fio2',3,ltvFmt('fio2'),ui.sel==='fio2'); });
+    updateLtvMon(); updateCases();
+  }
+}
+
+function howto(){
+  const ltvOn=shell&&shell.type==='panel';
+  const steps=ltvOn?[
+    'Elija el tipo con <b>Volumen/Presión</b> y el modo con el botón <b>Selec.</b> (VC/VAC, SIMV o CPAP/PSV). <b>VNIP</b> activa la ventilación no invasiva.',
+    'Pulse el botón bajo un control: su display parpadea. Gire el <b>mando de Ajuste</b> (o use −/+) y pulse otra vez el botón (o ✓) para confirmar.',
+    'Ajuste <b>PEEP</b>, <b>O2%</b> y las alarmas (<b>Presión Alta</b>, <b>Presión Baja</b>, <b>V. Bajo</b>). Sensibilidad «oF» desactiva el disparo.',
+    'Pulse <b>Marcha/Paro</b> para ventilar; para detener, púlselo dos veces en 3 s.',
+    '<b>Inhib/alarma</b> silencia 2 min, <b>Bloqueo</b> evita cambios accidentales y pulsar <b>O2%</b> unos segundos da Flush de O₂.'
+  ]:[
+    'Mantenga el botón <b>encendido</b> para encender; espere el autochequeo.',
+    'En <b>Standby</b>: elija sexo y <b>altura</b> (toque el círculo, gire el mando y púlselo); se calcula el <b>PCI</b>.',
+    'Realice <b>Compr. Prev</b> (estanqueidad y calibraciones).',
+    '<b>Modos</b>: elija el modo y confirme. En <b>Controles</b> toque el parámetro, gire el mando y <b>púlselo</b> (o ✓) para confirmar.',
+    'Revise <b>Alarmas</b> y pulse <b>Comenzar ventilación</b>.'
+  ];
+  $('#howto').innerHTML='<ol class="mb-2 ps-3">'+steps.map(x=>'<li>'+x+'</li>').join('')+'</ol><div class="text-secondary">Simulador educativo con un modelo pulmonar simplificado (1 compartimento). No reemplaza el manual del fabricante ni la capacitación con el equipo real.</div>';
+}
+$('#hVol').addEventListener('input',e=>{ Snd.init(); setVol(+e.target.value); Snd.tick(); });
+$('#btnMute').addEventListener('click',()=>{ Snd.init(); Snd.muted=!Snd.muted; Snd.apply(); updMute(); if(!Snd.muted) Snd.ok(); });
+$('#swFlow').addEventListener('change',e=>{ Snd.init(); if(e.target.checked) Snd.flowStart(); else Snd.flowStop(); });
+
+/* ================= PULMÓN DE PRUEBA CONECTADO ================= */
+const SHCOL={T1:'#e8861a',LTV:'#5a47ad',OXY:'#2d8be6',SV300:'#ee3a4c',PB980:'#2f9bf0',SERVO:'#1fc9a8'};
+const lung={built:false,E:{},oi:0,oe:0,op:0,slow:0};
+function buildLung(){
+  let ticks='';
+  for(let v=0;v<=60;v+=10){
+    const a=(-120+v/60*240-90)*Math.PI/180, x1=564+Math.cos(a)*29, y1=62+Math.sin(a)*29, x2=564+Math.cos(a)*34, y2=62+Math.sin(a)*34;
+    ticks+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#44505c" stroke-width="1.5"/>`;
+    if(v%20===0){ const xt=564+Math.cos(a)*21, yt=62+Math.sin(a)*21+3; ticks+=`<text x="${xt.toFixed(1)}" y="${yt.toFixed(1)}" text-anchor="middle" font-size="8" fill="#44505c">${v}</text>`; }
+  }
+  let vt='';
+  for(let v=0;v<=1500;v+=500){ const y=300-v/1500*230; vt+=`<line x1="954" y1="${y}" x2="960" y2="${y}" stroke="#667"/><text x="950" y="${y+3}" text-anchor="end" font-size="9" fill="#667">${v}</text>`; }
+  const ribs=[0,1,2].map(i=>{ const y=140+i*34; return `<path d="M694 ${y+14} Q760 ${y-8} 796 ${y+6}" fill="none" stroke="#d3c3ba" stroke-width="3"/><path d="M906 ${y+14} Q840 ${y-8} 804 ${y+6}" fill="none" stroke="#d3c3ba" stroke-width="3"/>`; }).join('');
+  const svg=`<svg viewBox="0 0 1040 340" role="img" aria-label="Pulmón de prueba conectado al ventilador">
+  <defs>
+    <linearGradient id="gLung" x1="0" y1="0" x2="0" y2="1"><stop id="lvS1" offset="0" stop-color="#f7b4b9"/><stop id="lvS2" offset="1" stop-color="#e98a93"/></linearGradient>
+    <linearGradient id="gVent" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a4d52"/><stop offset="1" stop-color="#2b2d31"/></linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1040" height="340" rx="14" fill="#f4f6fa"/>
+  <rect x="16" y="92" width="150" height="136" rx="14" fill="url(#gVent)"/>
+  <rect x="16" y="92" width="150" height="12" rx="6" id="lvStripe" fill="#e8861a"/>
+  <text id="lvName" x="91" y="146" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">Hamilton-T1</text>
+  <text id="lvState" x="91" y="168" text-anchor="middle" fill="#9fe08f" font-size="12">Apagado</text>
+  <text x="91" y="204" text-anchor="middle" fill="#aab" font-size="10">Ventilador</text>
+  <text x="300" y="124" text-anchor="middle" font-size="11" fill="#5a6573">Rama inspiratoria</text>
+  <text x="300" y="224" text-anchor="middle" font-size="11" fill="#5a6573">Rama espiratoria</text>
+  <path id="lvPi" d="M166 138 H430 C490 138 500 156 548 160" fill="none" stroke="#5aa7e0" stroke-width="18" stroke-linecap="round"/>
+  <path d="M166 138 H430 C490 138 500 156 548 160" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="18" stroke-dasharray="3 7"/>
+  <path id="lvFi" class="lflow" d="M166 138 H430 C490 138 500 156 548 160"/>
+  <path id="lvPe" d="M166 196 H430 C490 196 500 174 548 170" fill="none" stroke="#9aa3ad" stroke-width="18" stroke-linecap="round"/>
+  <path d="M166 196 H430 C490 196 500 174 548 170" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="18" stroke-dasharray="3 7"/>
+  <path id="lvFe" class="lflow" d="M166 196 H430 C490 196 500 174 548 170"/>
+  <line x1="564" y1="150" x2="564" y2="98" stroke="#7b8794" stroke-width="3"/>
+  <circle cx="564" cy="62" r="38" fill="#fff" stroke="#44505c" stroke-width="3"/>
+  ${ticks}
+  <text x="564" y="86" text-anchor="middle" font-size="8" fill="#44505c">cmH₂O</text>
+  <line id="lvNeedle" x1="564" y1="62" x2="564" y2="36" stroke="#d9231f" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="564" cy="62" r="3.5" fill="#333"/>
+  <g id="lvHose" style="transform-origin:580px 165px;transition:transform .35s ease">
+    <path d="M580 165 H664" fill="none" stroke="#8fd0f0" stroke-width="16" stroke-linecap="butt"/>
+    <path d="M580 165 H664" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="16" stroke-dasharray="3 6"/>
+    <rect x="656" y="155" width="12" height="20" rx="3" fill="#cfd6dd" stroke="#6b7580"/>
+  </g>
+  <g id="lvY">
+    <rect x="538" y="140" width="64" height="50" fill="transparent"/>
+    <rect class="ycap" x="544" y="150" width="38" height="30" rx="8" fill="#cfd6dd" stroke="#6b7580" stroke-width="2"/>
+    <text x="563" y="222" text-anchor="middle" font-size="11" fill="#0d6efd" font-weight="600">Pieza en Y</text>
+    <text x="563" y="236" text-anchor="middle" font-size="10" fill="#0d6efd">(clic: desconectar)</text>
+  </g>
+  <text id="lvDiscTxt" class="lvblink" x="420" y="292" text-anchor="middle" font-size="16" font-weight="800" fill="#d9231f" style="display:none">¡CIRCUITO DESCONECTADO!</text>
+  <path id="lvEt" d="M668 165 H690 C735 165 745 62 800 62 V118" fill="none" stroke="#8fd0f0" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/>
+  <path id="lvFp" class="lflow" d="M668 165 H690 C735 165 745 62 800 62 V118"/>
+  <text x="704" y="40" font-size="11" fill="#5a6573">Tubo endotraqueal</text>
+  <g id="lvThorax"><rect x="688" y="104" width="224" height="196" rx="64" fill="rgba(255,236,226,.55)" stroke="#c9b6ab" stroke-width="3"/>${ribs}</g>
+  <rect x="793" y="60" width="14" height="66" rx="6" fill="#f2d0cc" stroke="#c9a09c" opacity=".85"/>
+  <path d="M800 62 V118" stroke="#8fd0f0" stroke-width="8" stroke-linecap="round"/>
+  <g id="lvBronchi" stroke="#f2d0cc" stroke-linecap="round" stroke-width="9"><path d="M800 124 L768 152"/><path d="M800 124 L832 152"/></g>
+  <g id="lvLungs">
+    <path d="M792 140 C760 138 722 168 716 222 C712 262 730 284 764 282 C786 280 794 262 794 240 Z" fill="url(#gLung)" stroke="#c4636f" stroke-width="2"/>
+    <path d="M808 140 C840 138 878 168 884 222 C888 262 870 284 836 282 C814 280 806 262 806 240 Z" fill="url(#gLung)" stroke="#c4636f" stroke-width="2"/>
+    <g stroke="#c4636f" stroke-width="1.5" opacity=".45" fill="none"><path d="M790 150 L760 190 M776 170 L744 190 M768 198 L742 230"/><path d="M810 150 L840 190 M824 170 L856 190 M832 198 L858 230"/></g>
+  </g>
+  <path id="lvDia" d="M692 296 Q800 262 908 296" fill="none" stroke="#c0605a" stroke-width="8" stroke-linecap="round"/>
+  <text x="800" y="322" text-anchor="middle" font-size="11" fill="#5a6573">Diafragma · Pulmones · Tórax</text>
+  <rect x="960" y="70" width="28" height="230" rx="5" fill="#fff" stroke="#8892a0" stroke-width="2"/>
+  <rect id="lvVol" x="962" y="300" width="24" height="0" fill="#7bd36a"/>
+  ${vt}
+  <text x="974" y="56" text-anchor="middle" font-size="11" fill="#5a6573">Volumen</text>
+  <text id="lvVolTxt" x="974" y="322" text-anchor="middle" font-size="12" font-weight="700" fill="#333">0 ml</text>
+</svg>`;
+  $('#lungHost').innerHTML=svg;
+  const ids={needle:'lvNeedle',lungs:'lvLungs',thorax:'lvThorax',dia:'lvDia',fi:'lvFi',fe:'lvFe',fp:'lvFp',hose:'lvHose',disc:'lvDiscTxt',vol:'lvVol',volT:'lvVolTxt',st:'lvState',s1:'lvS1',s2:'lvS2',bron:'lvBronchi',y:'lvY'};
+  Object.keys(ids).forEach(k=>{ lung.E[k]=$('#'+ids[k]); });
+  const stats=[['Presión vía aérea','lsPaw','cmH₂O'],['Presión alveolar','lsPalv','cmH₂O'],['Flujo','lsQ','l/min'],['Volumen sobre CRF','lsV','ml'],['Esfuerzo del paciente','lsPmus','cmH₂O'],['Mecánica','lsMech','']];
+  $('#lungStats').innerHTML=stats.map(x=>`<div class="col-6 col-md-4 col-xl-2"><div class="lstat"><small>${x[0]}${x[2]?' ('+x[2]+')':''}</small><b id="${x[1]}">--</b></div></div>`).join('');
+  lung.E.y.addEventListener('click',()=>{ initAudio(); Snd.tap(); setDisc(!eng.pt.disc); });
+  lung.built=true;
+}
+function lungTick(){
+  if(!lung.built) return;
+  const E=lung.E, V=Math.max(0,eng.V*1000), frac=Math.min(1.8,V/900), Q=eng.Q*60, disc=eng.pt.disc;
+  E.lungs.setAttribute('transform',`translate(800 210) scale(${(1+0.28*frac).toFixed(3)} ${(1+0.2*frac).toFixed(3)}) translate(-800 -210)`);
+  E.thorax.setAttribute('transform',`translate(800 202) scale(${(1+0.07*frac).toFixed(3)} ${(1+0.05*frac).toFixed(3)}) translate(-800 -202)`);
+  const eff=Math.max(0,Math.min(1,eng.Pmus/10)), cy=252+10*Math.min(1,frac)+30*eff;
+  E.dia.setAttribute('d',`M692 296 Q800 ${cy.toFixed(1)} 908 296`);
+  const ang=-120+Math.max(-5,Math.min(60,eng.Paw))/60*240;
+  E.needle.setAttribute('transform',`rotate(${ang.toFixed(1)} 564 62)`);
+  const h=Math.min(230,V/1500*230); E.vol.setAttribute('y',(300-h).toFixed(1)); E.vol.setAttribute('height',h.toFixed(1));
+  const k=0.09; lung.oi-=Math.max(0,Q)*k; lung.oe+=Math.max(0,-Q)*k; lung.op-=Q*k;
+  const o=Math.min(.95,Math.abs(Q)/6);
+  E.fi.style.strokeDashoffset=lung.oi; E.fe.style.strokeDashoffset=lung.oe; E.fp.style.strokeDashoffset=lung.op;
+  E.fi.style.opacity=Q>0?o:0; E.fe.style.opacity=Q<0?o:0; E.fp.style.opacity=disc?0:o;
+  Snd.flowSet(eng.running?eng.Q:0);
+  const now=performance.now();
+  if(now-lung.slow<200) return; lung.slow=now;
+  const C=eng.pt.C, R=eng.pt.R, t=Math.max(0,Math.min(1,(C-20)/60));
+  const mix=(a,b)=>Math.round(a+(b-a)*t);
+  E.s1.setAttribute('stop-color',`rgb(${mix(190,247)},${mix(110,180)},${mix(120,185)})`);
+  E.s2.setAttribute('stop-color',`rgb(${mix(165,233)},${mix(78,138)},${mix(90,147)})`);
+  E.bron.setAttribute('stroke-width',(9-Math.max(0,Math.min(5,(R-10)/10))).toFixed(1));
+  E.hose.style.transform=disc?'rotate(30deg)':'rotate(0deg)';
+  E.disc.style.display=disc?'':'none';
+  const stt=dev.state==='run'?'Ventilando':dev.state==='standby'?'Standby':dev.state==='boot'?'Iniciando':'Apagado';
+  E.st.textContent=stt; E.st.setAttribute('fill',dev.state==='run'?'#9fe08f':'#f3d27a');
+  E.volT.textContent=Math.round(V)+' ml';
+  const g=(id,v)=>{ const el=$('#'+id); if(el) el.textContent=v; };
+  g('lsPaw',eng.Paw.toFixed(1)); g('lsPalv',(V/Math.max(1,C)).toFixed(1)); g('lsQ',Q.toFixed(0)); g('lsV',Math.round(V));
+  g('lsPmus',eng.Pmus.toFixed(1)); g('lsMech',`C ${C} · R ${R}`);
+  const bd=$('#lungBadge'); if(bd){ bd.textContent=disc?'Desconectado':'Conectado'; bd.className='badge '+(disc?'text-bg-danger':'text-bg-success'); }
+}
+
+renderCases(); syncSliders(); loadScen('esp'); buildLung(); buildShellBar();
+{ let sv='T1'; try{ sv=localStorage.getItem('vent-shell')||'T1'; }catch(e){} setShell(sv,true); }
+howto(); eng.ev.length=0; fit(); requestAnimationFrame(loop);
+</script>
+</body>
+</html>
